@@ -39,19 +39,7 @@ func TestMongoDBURLStorer_Add(t *testing.T) {
 			err: nil,
 		},
 		{
-			name: "Happy path",
-			url: models.URLShortened{
-				URL:  "https://shrtnr.dev",
-				Slug: "aeiou",
-				Hits: 0,
-			},
-			setupCollection: func(ctx context.Context, coll *mongo.Collection) error {
-				return nil
-			},
-			err: nil,
-		},
-		{
-			name: "Sad path",
+			name: "Sad path - existing slug",
 			url: models.URLShortened{
 				URL:  "https://shrtnr.dev",
 				Slug: "aeiou",
