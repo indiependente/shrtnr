@@ -1,0 +1,29 @@
+version: '3.7'
+
+services:
+  shrtnr:
+    build: .
+    restart: always
+    command: go run main.go
+    ports:
+      - "7000:7000"
+    environment:
+      - MONGODB_PORT=27017
+      - MONGODB_USER=frank
+      - MONGODB_PASSWORD=password
+  db:
+    image: mongo:latest
+    restart: always
+    env_file: .env
+    environment:
+      - MONGO_INITDB_DATABASE=${MONGO_INITDB_DATABASE}
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+    ports:
+      - 27017:27017
+    volumes:
+      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+      - mongodb_data_container:/data/db
+
+volumes:
+  mongodb_data_container:
