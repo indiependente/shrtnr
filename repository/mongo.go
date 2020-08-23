@@ -66,11 +66,17 @@ func (m MongoDBURLStorer) Get(ctx context.Context, slug string) (models.URLShort
 // Returns an error if any.
 func (m MongoDBURLStorer) Update(ctx context.Context, newshort models.URLShortened) error {
 	filter := bson.D{{"slug", newshort.Slug}}
-	result, err := m.urls.UpdateOne(ctx, filter, toMongo(newshort))
+	update := bson.D{
+		{"$set", toMongo(newshort)},
+		{"$currentDate", bson.D{
+			{"lastModified", true},
+		}},
+	}
+	result, err := m.urls.UpdateOne(ctx, filter, update)
 	if err != nil {
 		return fmt.Errorf("could not update: %w", err)
 	}
-	if result.MatchedCount != 0 {
+	if result.MatchedCount == 0 {
 		return fmt.Errorf("could not update: %w", ErrSlugNotFound)
 	}
 	return nil
