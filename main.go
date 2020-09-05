@@ -1,6 +1,8 @@
 package main
 
 import (
+	"log"
+
 	"github.com/gofiber/fiber"
 )
 
@@ -11,5 +13,5 @@ func main() {
 		c.Send("Hello, World 👋!")
 	})
 
-	app.Listen(7000)
+	log.Fatal(app.Listen(7000))
 }

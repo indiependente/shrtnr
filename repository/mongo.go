@@ -52,7 +52,7 @@ func (m MongoDBURLStorer) Add(ctx context.Context, shortened models.URLShortened
 // Returns an error if any.
 func (m MongoDBURLStorer) Get(ctx context.Context, slug string) (models.URLShortened, error) {
 	var shortURL mongoURLShortened
-	err := m.urls.FindOne(ctx, bson.D{{"slug", slug}}).Decode(&shortURL)
+	err := m.urls.FindOne(ctx, bson.D{{Key: "slug", Value: slug}}).Decode(&shortURL)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return models.URLShortened{}, ErrSlugNotFound
@@ -65,11 +65,11 @@ func (m MongoDBURLStorer) Get(ctx context.Context, slug string) (models.URLShort
 // Update deletes a shortened url from the mongodb repository.
 // Returns an error if any.
 func (m MongoDBURLStorer) Update(ctx context.Context, newshort models.URLShortened) error {
-	filter := bson.D{{"slug", newshort.Slug}}
+	filter := bson.D{{Key: "slug", Value: newshort.Slug}}
 	update := bson.D{
-		{"$set", toMongo(newshort)},
-		{"$currentDate", bson.D{
-			{"lastModified", true},
+		{Key: "$set", Value: toMongo(newshort)},
+		{Key: "$currentDate", Value: bson.D{
+			{Key: "lastModified", Value: true},
 		}},
 	}
 	result, err := m.urls.UpdateOne(ctx, filter, update)
@@ -85,7 +85,7 @@ func (m MongoDBURLStorer) Update(ctx context.Context, newshort models.URLShorten
 // Delete deletes a shortened url from the mongodb repository.
 // Returns an error if any.
 func (m MongoDBURLStorer) Delete(ctx context.Context, slug string) error {
-	res, err := m.urls.DeleteOne(ctx, bson.D{{"slug", slug}})
+	res, err := m.urls.DeleteOne(ctx, bson.D{{Key: "slug", Value: slug}})
 	if err != nil {
 		return fmt.Errorf("could not delete: %w", err)
 	}

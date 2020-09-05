@@ -68,24 +68,24 @@ func TestMongoDBURLStorer_Add(t *testing.T) {
 			defer cancel()
 			err = client.Connect(ctx)
 			require.NoError(t, err)
-			defer client.Disconnect(ctx)
+			defer client.Disconnect(ctx) // nolint: errcheck
 			db := client.Database("shrtnr")
 			// create collection
 			coll := db.Collection(fmt.Sprintf("urls_test_add_%d%d", time.Now().UnixNano(), rand.Int()))
-			defer coll.Drop(ctx)
+			defer coll.Drop(ctx) // nolint: errcheck
 			// add indexes
 			models := []mongo.IndexModel{
 				{
-					Keys: bson.D{{"slug", 1}},
+					Keys: bson.D{{Key: "slug", Value: 1}},
 				},
 				{
-					Keys: bson.D{{"url", 1}},
+					Keys: bson.D{{Key: "url", Value: 1}},
 				},
 			}
 			opts := options.CreateIndexes().SetMaxTime(2 * time.Second)
 			_, err = coll.Indexes().CreateMany(ctx, models, opts)
 			require.NoError(t, err)
-			defer coll.Indexes().DropAll(ctx)
+			defer coll.Indexes().DropAll(ctx) // nolint: errcheck
 			// run additional collection setup func
 			err = tt.setupCollection(ctx, coll)
 			require.NoError(t, err)
@@ -148,24 +148,24 @@ func TestMongoDBURLStorer_Delete(t *testing.T) {
 			defer cancel()
 			err = client.Connect(ctx)
 			require.NoError(t, err)
-			defer client.Disconnect(ctx)
+			defer client.Disconnect(ctx) // nolint: errcheck
 			db := client.Database("shrtnr")
 			// create collection
 			coll := db.Collection(fmt.Sprintf("urls_test_delete_%d%d", time.Now().UnixNano(), rand.Int()))
-			defer coll.Drop(ctx)
+			defer coll.Drop(ctx) // nolint: errcheck
 			// add indexes
 			models := []mongo.IndexModel{
 				{
-					Keys: bson.D{{"slug", 1}},
+					Keys: bson.D{{Key: "slug", Value: 1}},
 				},
 				{
-					Keys: bson.D{{"url", 1}},
+					Keys: bson.D{{Key: "url", Value: 1}},
 				},
 			}
 			opts := options.CreateIndexes().SetMaxTime(2 * time.Second)
 			_, err = coll.Indexes().CreateMany(ctx, models, opts)
 			require.NoError(t, err)
-			defer coll.Indexes().DropAll(ctx)
+			defer coll.Indexes().DropAll(ctx) // nolint: errcheck
 			// run additional collection setup func
 			err = tt.setupCollection(ctx, coll)
 			require.NoError(t, err)
@@ -226,24 +226,24 @@ func TestMongoDBURLStorer_Get(t *testing.T) {
 			defer cancel()
 			err = client.Connect(ctx)
 			require.NoError(t, err)
-			defer client.Disconnect(ctx)
+			defer client.Disconnect(ctx) // nolint: errcheck
 			db := client.Database("shrtnr")
 			// create collection
 			coll := db.Collection(fmt.Sprintf("urls_test_get_%d%d", time.Now().UnixNano(), rand.Int()))
-			defer coll.Drop(ctx)
+			defer coll.Drop(ctx) // nolint: errcheck
 			// add indexes
 			models := []mongo.IndexModel{
 				{
-					Keys: bson.D{{"slug", 1}},
+					Keys: bson.D{{Key: "slug", Value: 1}},
 				},
 				{
-					Keys: bson.D{{"url", 1}},
+					Keys: bson.D{{Key: "url", Value: 1}},
 				},
 			}
 			opts := options.CreateIndexes().SetMaxTime(2 * time.Second)
 			_, err = coll.Indexes().CreateMany(ctx, models, opts)
 			require.NoError(t, err)
-			defer coll.Indexes().DropAll(ctx)
+			defer coll.Indexes().DropAll(ctx) // nolint: errcheck
 			// run additional collection setup func
 			err = tt.setupCollection(ctx, coll)
 			require.NoError(t, err)
@@ -307,24 +307,24 @@ func TestMongoDBURLStorer_Update(t *testing.T) {
 			defer cancel()
 			err = client.Connect(ctx)
 			require.NoError(t, err)
-			defer client.Disconnect(ctx)
+			defer client.Disconnect(ctx) // nolint: errcheck
 			db := client.Database("shrtnr")
 			// create collection
 			coll := db.Collection(fmt.Sprintf("urls_test_update_%d%d", time.Now().UnixNano(), rand.Int()))
-			defer coll.Drop(ctx)
+			defer coll.Drop(ctx) // nolint: errcheck
 			// add indexes
 			models := []mongo.IndexModel{
 				{
-					Keys: bson.D{{"slug", 1}},
+					Keys: bson.D{{Key: "slug", Value: 1}},
 				},
 				{
-					Keys: bson.D{{"url", 1}},
+					Keys: bson.D{{Key: "url", Value: 1}},
 				},
 			}
 			opts := options.CreateIndexes().SetMaxTime(2 * time.Second)
 			_, err = coll.Indexes().CreateMany(ctx, models, opts)
 			require.NoError(t, err)
-			defer coll.Indexes().DropAll(ctx)
+			defer coll.Indexes().DropAll(ctx) // nolint: errcheck
 			// run additional collection setup func
 			err = tt.setupCollection(ctx, coll)
 			require.NoError(t, err)
