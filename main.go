@@ -1,17 +1,31 @@
 package main
 
 import (
-	"log"
+	"context"
 
-	"github.com/gofiber/fiber"
+	"github.com/indiependente/pkg/logger"
+	"github.com/indiependente/pkg/shutdown"
+	"github.com/indiependente/shrtnr/server"
 )
 
+const appName = "shrtnr"
+
 func main() {
-	app := fiber.New()
+	ctx, cancel := context.WithCancel(context.Background())
+	log := logger.GetLoggerString(appName, "DEBUG")
 
-	app.Get("/", func(c *fiber.Ctx) {
-		c.Send("Hello, World 👋!")
-	})
+	srv := server.NewHTTPServer()
+	// Start HTTP server
+	go func() {
+		err := srv.Start(ctx)
+		if err != nil {
+			log.Fatal("error while running HTTP server", err)
+		}
+	}()
 
-	log.Fatal(app.Listen(7000))
+	// Wait
+	err := shutdown.Wait(ctx, cancel, srv.Shutdown)
+	if err != nil {
+		log.Fatal("error while shutting down server", err)
+	}
 }
