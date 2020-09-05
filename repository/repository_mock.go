@@ -60,15 +60,15 @@ func (mr *MockStorerMockRecorder) Get(ctx, slug interface{}) *gomock.Call {
 }
 
 // Update mocks base method
-func (m *MockStorer) Update(ctx context.Context, slug string) error {
-	ret := m.ctrl.Call(m, "Update", ctx, slug)
+func (m *MockStorer) Update(ctx context.Context, newshortened models.URLShortened) error {
+	ret := m.ctrl.Call(m, "Update", ctx, newshortened)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Update indicates an expected call of Update
-func (mr *MockStorerMockRecorder) Update(ctx, slug interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockStorer)(nil).Update), ctx, slug)
+func (mr *MockStorerMockRecorder) Update(ctx, newshortened interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockStorer)(nil).Update), ctx, newshortened)
 }
 
 // Delete mocks base method

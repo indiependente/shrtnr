@@ -14,6 +14,14 @@ type URLService struct {
 	slugLen int
 }
 
+// NewURLService returns a new instance of the URLService type.
+func NewURLService(store repository.Storer, slugLen int) URLService {
+	return URLService{
+		store:   store,
+		slugLen: slugLen,
+	}
+}
+
 func (usvc URLService) Add(ctx context.Context, shortURL models.URLShortened) error {
 	if shortURL.Slug == "" {
 		shortURL.Slug = generateSlug(usvc.slugLen)
@@ -32,6 +40,9 @@ func (usvc URLService) Add(ctx context.Context, shortURL models.URLShortened) er
 }
 
 func (usvc URLService) Get(ctx context.Context, slug string) (models.URLShortened, error) {
+	if slug == "" {
+		return models.URLShortened{}, fmt.Errorf("empty slug: %w", ErrInvalidSlug)
+	}
 	url, err := usvc.store.Get(ctx, slug)
 	if err != nil {
 		if err == repository.ErrSlugNotFound {
@@ -53,6 +64,9 @@ func (usvc URLService) increaseHitCounter(url models.URLShortened) {
 
 // Delete deletes the entry related to the input slug from the repository.
 func (usvc URLService) Delete(ctx context.Context, slug string) error {
+	if slug == "" {
+		return fmt.Errorf("empty slug: %w", ErrInvalidSlug)
+	}
 	err := usvc.store.Delete(ctx, slug)
 	if err != nil {
 		if err == repository.ErrSlugNotFound {

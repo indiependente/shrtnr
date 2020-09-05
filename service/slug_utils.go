@@ -47,6 +47,9 @@ func generateSlug(n int) string {
 }
 
 func validateSlug(slug string, slugLen int) bool {
+	if slugLen == 0 {
+		return false
+	}
 	if len(slug) != slugLen {
 		return false
 	}
