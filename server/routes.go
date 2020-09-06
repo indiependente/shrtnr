@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/go-openapi/strfmt"
 	"github.com/gofiber/fiber"
 	"github.com/gofiber/fiber/middleware"
 	"github.com/google/uuid"
@@ -30,6 +31,8 @@ func (srv HTTPServer) routes() {
 func (srv HTTPServer) RequestLogger(c *fiber.Ctx) {
 	method := string(c.Fasthttp.Request.Header.Method())
 	url := string(c.Fasthttp.Request.Header.RequestURI())
-	srv.log.Event(method).Info(url)
+	status := c.Fasthttp.Response.Header.StatusCode()
+	reqID := c.Fasthttp.Response.Header.Peek("X-Request-Id")
+	srv.log.Event(url).StatusCode(status).RequestID(strfmt.UUID(reqID)).Info(method)
 	c.Next()
 }
