@@ -35,10 +35,11 @@ func (m *MockService) EXPECT() *MockServiceMockRecorder {
 }
 
 // Add mocks base method
-func (m *MockService) Add(ctx context.Context, shortURL models.URLShortened) error {
+func (m *MockService) Add(ctx context.Context, shortURL models.URLShortened) (models.URLShortened, error) {
 	ret := m.ctrl.Call(m, "Add", ctx, shortURL)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(models.URLShortened)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // Add indicates an expected call of Add

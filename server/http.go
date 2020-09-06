@@ -4,24 +4,36 @@ import (
 	"context"
 
 	"github.com/gofiber/fiber"
+	"github.com/indiependente/pkg/logger"
+	"github.com/indiependente/shrtnr/service"
 )
 
 // HTTPServer implements a Server capable of serving HTTP requests.
 type HTTPServer struct {
-	app *fiber.App
+	app  *fiber.App
+	svc  service.Service
+	port int
+	log  logger.Logger
 }
 
 // NewHTTPServer returns a new instance of an HTTPServer.
-func NewHTTPServer() HTTPServer {
-	app := fiber.New()
+func NewHTTPServer(svc service.Service, port int, log logger.Logger) HTTPServer {
+	app := fiber.New(&fiber.Settings{
+		CaseSensitive: true,
+		StrictRouting: true,
+		ServerHeader:  "Fiber",
+	})
 	return HTTPServer{
-		app: app,
+		app:  app,
+		svc:  svc,
+		port: port,
+		log:  log,
 	}
 }
 
 // Start starts the HTTP server.
 func (srv HTTPServer) Start(ctx context.Context) error {
-	return srv.app.Listen(7000)
+	return srv.app.Listen(srv.port)
 }
 
 // Shutdown stops the HTTP server.
@@ -29,7 +41,9 @@ func (srv HTTPServer) Shutdown(ctx context.Context) error {
 	return srv.app.Shutdown()
 }
 
-// Routes sets the server's routes.
-func (srv HTTPServer) Routes(ctx context.Context) {
-	panic("implement me")
+// Setup applies all the server configurations enabling startup.
+func (srv HTTPServer) Setup(context.Context) error {
+	srv.middlewares()
+	srv.routes()
+	return nil
 }

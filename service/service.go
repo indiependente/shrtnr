@@ -27,7 +27,7 @@ func (e Error) Error() string {
 
 // Service defines the behaviour of a service capable of shortening urls, retrieving and deleting shortened ones.
 type Service interface {
-	Add(ctx context.Context, shortURL models.URLShortened) error
+	Add(ctx context.Context, shortURL models.URLShortened) (models.URLShortened, error)
 	Get(ctx context.Context, slug string) (models.URLShortened, error)
 	Delete(ctx context.Context, slug string) error
 }

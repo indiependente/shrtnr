@@ -1,10 +1,5 @@
 package service
 
-import (
-	"math/rand"
-	"time"
-)
-
 var (
 	lettersMap = map[rune]bool{
 		'a': true,
@@ -35,28 +30,3 @@ var (
 		'z': true,
 	}
 )
-
-func generateSlug(n int) string {
-	rand.Seed(time.Now().UnixNano())
-	var letters = []rune("abcdefghijklmnopqrstuvwxyz")
-	b := make([]rune, n)
-	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
-	}
-	return string(b)
-}
-
-func validateSlug(slug string, slugLen int) bool {
-	if slugLen == 0 {
-		return false
-	}
-	if len(slug) != slugLen {
-		return false
-	}
-	for _, c := range slug {
-		if !lettersMap[c] {
-			return false
-		}
-	}
-	return true
-}

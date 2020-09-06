@@ -5,6 +5,7 @@
 package server
 
 import (
+	context "context"
 	gomock "github.com/golang/mock/gomock"
 	reflect "reflect"
 )
@@ -33,35 +34,37 @@ func (m *MockServer) EXPECT() *MockServerMockRecorder {
 }
 
 // Start mocks base method
-func (m *MockServer) Start() error {
-	ret := m.ctrl.Call(m, "Start")
+func (m *MockServer) Start(arg0 context.Context) error {
+	ret := m.ctrl.Call(m, "Start", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Start indicates an expected call of Start
-func (mr *MockServerMockRecorder) Start() *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Start", reflect.TypeOf((*MockServer)(nil).Start))
+func (mr *MockServerMockRecorder) Start(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Start", reflect.TypeOf((*MockServer)(nil).Start), arg0)
 }
 
 // Shutdown mocks base method
-func (m *MockServer) Shutdown() error {
-	ret := m.ctrl.Call(m, "Shutdown")
+func (m *MockServer) Shutdown(arg0 context.Context) error {
+	ret := m.ctrl.Call(m, "Shutdown", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Shutdown indicates an expected call of Shutdown
-func (mr *MockServerMockRecorder) Shutdown() *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Shutdown", reflect.TypeOf((*MockServer)(nil).Shutdown))
+func (mr *MockServerMockRecorder) Shutdown(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Shutdown", reflect.TypeOf((*MockServer)(nil).Shutdown), arg0)
 }
 
-// Routes mocks base method
-func (m *MockServer) Routes() {
-	m.ctrl.Call(m, "Routes")
+// Setup mocks base method
+func (m *MockServer) Setup(arg0 context.Context) error {
+	ret := m.ctrl.Call(m, "Setup", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
-// Routes indicates an expected call of Routes
-func (mr *MockServerMockRecorder) Routes() *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Routes", reflect.TypeOf((*MockServer)(nil).Routes))
+// Setup indicates an expected call of Setup
+func (mr *MockServerMockRecorder) Setup(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Setup", reflect.TypeOf((*MockServer)(nil).Setup), arg0)
 }

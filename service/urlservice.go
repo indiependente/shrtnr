@@ -11,32 +11,32 @@ import (
 // URLService implements the Service interface.
 type URLService struct {
 	store   repository.Storer
-	slugLen int
+	slugger Slugger
 }
 
 // NewURLService returns a new instance of the URLService type.
-func NewURLService(store repository.Storer, slugLen int) URLService {
+func NewURLService(store repository.Storer, slugger Slugger) URLService {
 	return URLService{
 		store:   store,
-		slugLen: slugLen,
+		slugger: slugger,
 	}
 }
 
-func (usvc URLService) Add(ctx context.Context, shortURL models.URLShortened) error {
+func (usvc URLService) Add(ctx context.Context, shortURL models.URLShortened) (models.URLShortened, error) {
 	if shortURL.Slug == "" {
-		shortURL.Slug = generateSlug(usvc.slugLen)
+		shortURL.Slug = usvc.slugger.Slug()
 	}
-	if !validateSlug(shortURL.Slug, usvc.slugLen) {
-		return fmt.Errorf("could not use slug: %w", ErrInvalidSlug)
+	if !usvc.slugger.Validate(shortURL.Slug) {
+		return models.URLShortened{}, fmt.Errorf("could not use slug: %w", ErrInvalidSlug)
 	}
 	err := usvc.store.Add(ctx, shortURL)
 	if err != nil {
 		if err == repository.ErrSlugAlreadyInUse {
-			return fmt.Errorf("could not add: %w", ErrSlugAlreadyInUse)
+			return models.URLShortened{}, fmt.Errorf("could not add: %w", ErrSlugAlreadyInUse)
 		}
-		return fmt.Errorf("could not add: %w", err)
+		return models.URLShortened{}, fmt.Errorf("could not add: %w", err)
 	}
-	return nil
+	return shortURL, nil
 }
 
 func (usvc URLService) Get(ctx context.Context, slug string) (models.URLShortened, error) {

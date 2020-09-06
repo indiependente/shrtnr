@@ -8,5 +8,5 @@ import "context"
 type Server interface {
 	Start(context.Context) error
 	Shutdown(context.Context) error
-	Routes(context.Context)
+	Setup(context.Context) error
 }
