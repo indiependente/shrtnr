@@ -41,3 +41,15 @@ func putURL(service service.Service) fiber.Handler {
 		}
 	}
 }
+
+func delURL(service service.Service) fiber.Handler {
+	return func(c *fiber.Ctx) {
+		slug := c.Params("slug")
+		err := service.Delete(c.Context(), slug)
+		if err != nil {
+			c.Status(http.StatusInternalServerError).Send(err)
+			return
+		}
+		c.SendStatus(http.StatusOK)
+	}
+}

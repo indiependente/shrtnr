@@ -25,6 +25,7 @@ func (srv HTTPServer) middlewares() {
 func (srv HTTPServer) routes() {
 	srv.app.Get(URLPath+"/:slug", getURL(srv.svc))
 	srv.app.Put(URLPath, putURL(srv.svc))
+	srv.app.Delete(URLPath+"/:slug", delURL(srv.svc))
 }
 
 // RequestLogger logs the request
