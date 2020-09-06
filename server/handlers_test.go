@@ -120,6 +120,7 @@ func TestGetURL(t *testing.T) {
 			data, err := ioutil.ReadAll(resp.Body)
 			require.NoError(t, err)
 			err = json.Unmarshal(data, &url)
+			require.NoError(t, err)
 			require.Equal(t, tt.want, url)
 			err = srv.Shutdown(ctx) // nolint: errcheck
 			require.NoError(t, err)
@@ -250,6 +251,7 @@ func TestPutURL(t *testing.T) {
 			data, err := ioutil.ReadAll(resp.Body)
 			require.NoError(t, err)
 			err = json.Unmarshal(data, &url)
+			require.NoError(t, err)
 			require.Equal(t, tt.want, url)
 			err = srv.Shutdown(ctx) // nolint: errcheck
 			require.NoError(t, err)
