@@ -8,48 +8,72 @@ import (
 	"github.com/indiependente/shrtnr/service"
 )
 
-func getURL(service service.Service) fiber.Handler {
+func getURL(svc service.Service) fiber.Handler {
 	return func(c *fiber.Ctx) {
 		slug := c.Params("slug")
-		url, err := service.Get(c.Context(), slug)
-		if err != nil {
+		url, err := svc.Get(c.Context(), slug)
+		switch {
+		case err == service.ErrSlugNotFound:
+			c.SendStatus(http.StatusNotFound)
+			return
+		case err == service.ErrInvalidSlug:
 			c.SendStatus(http.StatusBadRequest)
 			return
-		}
-		if err := c.Status(http.StatusOK).JSON(url); err != nil {
+		case err != nil:
 			c.Status(http.StatusInternalServerError).Send(err)
 			return
+		default: // all good
+			if err := c.Status(http.StatusOK).JSON(url); err != nil {
+				c.Status(http.StatusInternalServerError).Send(err)
+				return
+			}
 		}
 	}
 }
 
-func putURL(service service.Service) fiber.Handler {
+func putURL(svc service.Service) fiber.Handler {
 	return func(c *fiber.Ctx) {
 		url := models.URLShortened{}
 		if err := c.BodyParser(&url); err != nil {
-			c.SendStatus(http.StatusBadRequest)
+			c.Status(http.StatusBadRequest).Send(err)
 			return
 		}
-		newUrl, err := service.Add(c.Context(), url)
-		if err != nil {
-			c.Status(500).Send(err)
+		newUrl, err := svc.Add(c.Context(), url)
+		switch {
+		case err == service.ErrSlugAlreadyInUse:
+			c.Status(http.StatusBadRequest).Send(err)
 			return
-		}
-		if err := c.Status(http.StatusAccepted).JSON(newUrl); err != nil {
+		case err == service.ErrInvalidSlug:
+			c.Status(http.StatusBadRequest).Send(err)
+			return
+		case err != nil:
 			c.Status(http.StatusInternalServerError).Send(err)
 			return
+		default: // all good
+			if err := c.Status(http.StatusOK).JSON(newUrl); err != nil {
+				c.Status(http.StatusInternalServerError).Send(err)
+				return
+			}
 		}
 	}
 }
 
-func delURL(service service.Service) fiber.Handler {
+func delURL(svc service.Service) fiber.Handler {
 	return func(c *fiber.Ctx) {
 		slug := c.Params("slug")
-		err := service.Delete(c.Context(), slug)
-		if err != nil {
+		err := svc.Delete(c.Context(), slug)
+		switch {
+		case err == service.ErrSlugNotFound:
+			c.SendStatus(http.StatusNotFound)
+			return
+		case err == service.ErrInvalidSlug:
+			c.SendStatus(http.StatusBadRequest)
+			return
+		case err != nil:
 			c.Status(http.StatusInternalServerError).Send(err)
 			return
+		default: // all good
+			c.SendStatus(http.StatusOK)
 		}
-		c.SendStatus(http.StatusOK)
 	}
 }

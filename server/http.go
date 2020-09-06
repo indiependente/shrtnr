@@ -17,12 +17,7 @@ type HTTPServer struct {
 }
 
 // NewHTTPServer returns a new instance of an HTTPServer.
-func NewHTTPServer(svc service.Service, port int, log logger.Logger) HTTPServer {
-	app := fiber.New(&fiber.Settings{
-		CaseSensitive: true,
-		StrictRouting: true,
-		ServerHeader:  "Fiber",
-	})
+func NewHTTPServer(app *fiber.App, svc service.Service, port int, log logger.Logger) HTTPServer {
 	return HTTPServer{
 		app:  app,
 		svc:  svc,

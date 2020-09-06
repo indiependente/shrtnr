@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/gofiber/fiber"
 	"github.com/indiependente/pkg/logger"
 	"github.com/indiependente/pkg/shutdown"
 	"github.com/indiependente/shrtnr/repository"
@@ -23,7 +24,7 @@ const (
 func main() {
 	err := run()
 	if err != nil {
-		log.Fatal("unexpected failure", err)
+		log.Fatal("unexpected failure: ", err)
 	}
 }
 
@@ -64,7 +65,12 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("could not parse PORT: %w", err)
 	}
-	srv := server.NewHTTPServer(svc, port, log)
+	app := fiber.New(&fiber.Settings{
+		CaseSensitive: true,
+		StrictRouting: true,
+		ServerHeader:  "Fiber",
+	})
+	srv := server.NewHTTPServer(app, svc, port, log)
 	err = srv.Setup(ctx)
 	if err != nil {
 		return fmt.Errorf("error while running server setup: %w", err)

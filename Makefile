@@ -9,4 +9,4 @@ test:
 	go test -v ./...
 
 build:
-	CGO_ENABLED=0 go build -o bin/shrtnr cmd/main.go
+	CGO_ENABLED=0 go build -o bin/shrtnr main.go
