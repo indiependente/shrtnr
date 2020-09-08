@@ -8,8 +8,10 @@ import (
 )
 
 const (
-	// URLPath is the path used to shorten urls or resolve url slugs.
-	URLPath = `/url`
+	// URLShortenPath is the path used to shorten urls.
+	URLShortenPath = `/url`
+	// URLResolvePath is the path used to resolve shortened urls.
+	URLResolvePath = `/resolve`
 )
 
 func (srv HTTPServer) middlewares() {
@@ -23,9 +25,10 @@ func (srv HTTPServer) middlewares() {
 }
 
 func (srv HTTPServer) routes() {
-	srv.app.Get(URLPath+"/:slug", getURL(srv.svc))
-	srv.app.Put(URLPath, putURL(srv.svc))
-	srv.app.Delete(URLPath+"/:slug", delURL(srv.svc))
+	srv.app.Get(URLShortenPath+"/:slug", getURL(srv.svc))
+	srv.app.Put(URLShortenPath, putURL(srv.svc))
+	srv.app.Delete(URLShortenPath+"/:slug", delURL(srv.svc))
+	srv.app.Get(URLResolvePath+"/:slug", resolveURL(srv.svc))
 }
 
 // RequestLogger logs the request

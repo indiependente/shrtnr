@@ -77,3 +77,23 @@ func delURL(svc service.Service) fiber.Handler {
 		}
 	}
 }
+
+func resolveURL(svc service.Service) fiber.Handler {
+	return func(c *fiber.Ctx) {
+		slug := c.Params("slug")
+		url, err := svc.Get(c.Context(), slug)
+		switch {
+		case err == service.ErrSlugNotFound:
+			c.SendStatus(http.StatusNotFound)
+			return
+		case err == service.ErrInvalidSlug:
+			c.SendStatus(http.StatusBadRequest)
+			return
+		case err != nil:
+			c.Status(http.StatusInternalServerError).Send(err)
+			return
+		default: // all good
+			c.Redirect(url.URL, http.StatusMovedPermanently)
+		}
+	}
+}
