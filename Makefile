@@ -10,3 +10,6 @@ test:
 
 build:
 	CGO_ENABLED=0 go build -o bin/shrtnr main.go
+
+docker:
+	docker build . -t indiependente/shrtnr
