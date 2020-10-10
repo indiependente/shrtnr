@@ -2,8 +2,9 @@ package server
 
 import (
 	"context"
+	"fmt"
 
-	"github.com/gofiber/fiber"
+	"github.com/gofiber/fiber/v2"
 	"github.com/indiependente/pkg/logger"
 	"github.com/indiependente/shrtnr/service"
 )
@@ -28,7 +29,7 @@ func NewHTTPServer(app *fiber.App, svc service.Service, port int, log logger.Log
 
 // Start starts the HTTP server.
 func (srv HTTPServer) Start(ctx context.Context) error {
-	return srv.app.Listen(srv.port)
+	return srv.app.Listen(fmt.Sprintf(":%d", srv.port))
 }
 
 // Shutdown stops the HTTP server.

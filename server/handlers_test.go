@@ -5,11 +5,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"testing"
 
-	"github.com/gofiber/fiber"
+	"github.com/gofiber/fiber/v2"
 	"github.com/golang/mock/gomock"
 	"github.com/indiependente/pkg/logger"
 	"github.com/indiependente/shrtnr/models"
@@ -47,7 +48,7 @@ func TestGetURL(t *testing.T) {
 			name:              "Sad path - empty slug",
 			slug:              "",
 			setupExpectations: func(mockService *service.MockService) {},
-			wantStatus:        http.StatusNotFound,
+			wantStatus:        http.StatusMethodNotAllowed,
 			want:              models.URLShortened{},
 		},
 		{
@@ -87,16 +88,17 @@ func TestGetURL(t *testing.T) {
 			mockSvc := service.NewMockService(ctrl)
 			tt.setupExpectations(mockSvc)
 
-			app := fiber.New(&fiber.Settings{
+			port := 12345
+			app := fiber.New(fiber.Config{
 				CaseSensitive:    true,
 				StrictRouting:    true,
 				ServerHeader:     "Fiber",
 				DisableKeepalive: true, // this is needed to avoid the shutdown being stuck for 30-60 seconds
 			})
-			srv := NewHTTPServer(app, mockSvc, 9000, logger.GetLogger("test", logger.DISABLED))
+			srv := NewHTTPServer(app, mockSvc, port, logger.GetLogger("test", logger.DISABLED))
 			err := srv.Setup(ctx)
 			require.NoError(t, err)
-
+			defer srv.Shutdown(ctx) // nolint: errcheck
 			// Start HTTP server
 			go func() {
 				err := srv.Start(ctx)
@@ -106,7 +108,7 @@ func TestGetURL(t *testing.T) {
 			}()
 
 			// build request
-			path := "http://localhost:9000/url/" + tt.slug
+			path := getPath(port, URLShortenPath, tt.slug)
 			req, err := http.NewRequest(http.MethodGet, path, nil)
 			require.NoError(t, err)
 			// send request to server
@@ -120,10 +122,10 @@ func TestGetURL(t *testing.T) {
 			data, err := ioutil.ReadAll(resp.Body)
 			require.NoError(t, err)
 			err = json.Unmarshal(data, &url)
-			require.NoError(t, err)
+			if err != nil {
+				return
+			}
 			require.Equal(t, tt.want, url)
-			err = srv.Shutdown(ctx) // nolint: errcheck
-			require.NoError(t, err)
 		})
 	}
 }
@@ -215,16 +217,17 @@ func TestPutURL(t *testing.T) {
 			mockSvc := service.NewMockService(ctrl)
 			tt.setupExpectations(mockSvc)
 
-			app := fiber.New(&fiber.Settings{
+			port := 12346
+			app := fiber.New(fiber.Config{
 				CaseSensitive:    true,
 				StrictRouting:    true,
 				ServerHeader:     "Fiber",
 				DisableKeepalive: true, // this is needed to avoid the shutdown being stuck for 30-60 seconds
 			})
-			srv := NewHTTPServer(app, mockSvc, 9000, logger.GetLogger("test", logger.DISABLED))
+			srv := NewHTTPServer(app, mockSvc, port, logger.GetLogger("test", logger.DISABLED))
 			err := srv.Setup(ctx)
 			require.NoError(t, err)
-
+			defer srv.Shutdown(ctx) // nolint: errcheck
 			// Start HTTP server
 			go func() {
 				err := srv.Start(ctx)
@@ -234,7 +237,7 @@ func TestPutURL(t *testing.T) {
 			}()
 
 			// build request
-			path := "http://localhost:9000/url"
+			path := getPath(port, URLShortenPath, "")
 			reqBody, err := json.Marshal(tt.url)
 			require.NoError(t, err)
 			req, err := http.NewRequest(http.MethodPut, path, bytes.NewReader(reqBody))
@@ -251,10 +254,10 @@ func TestPutURL(t *testing.T) {
 			data, err := ioutil.ReadAll(resp.Body)
 			require.NoError(t, err)
 			err = json.Unmarshal(data, &url)
-			require.NoError(t, err)
+			if err != nil {
+				return
+			}
 			require.Equal(t, tt.want, url)
-			err = srv.Shutdown(ctx) // nolint: errcheck
-			require.NoError(t, err)
 		})
 	}
 }
@@ -279,7 +282,7 @@ func TestDeleteURL(t *testing.T) {
 			name:              "Sad path - empty slug",
 			slug:              "",
 			setupExpectations: func(mockService *service.MockService) {},
-			wantStatus:        http.StatusNotFound,
+			wantStatus:        http.StatusMethodNotAllowed,
 		},
 		{
 			name: "Sad path - Slug not found",
@@ -315,15 +318,17 @@ func TestDeleteURL(t *testing.T) {
 			mockSvc := service.NewMockService(ctrl)
 			tt.setupExpectations(mockSvc)
 
-			app := fiber.New(&fiber.Settings{
+			port := 12347
+			app := fiber.New(fiber.Config{
 				CaseSensitive:    true,
 				StrictRouting:    true,
 				ServerHeader:     "Fiber",
 				DisableKeepalive: true, // this is needed to avoid the shutdown being stuck for 30-60 seconds
 			})
-			srv := NewHTTPServer(app, mockSvc, 9000, logger.GetLogger("test", logger.DISABLED))
+			srv := NewHTTPServer(app, mockSvc, port, logger.GetLogger("test", logger.DISABLED))
 			err := srv.Setup(ctx)
 			require.NoError(t, err)
+			defer srv.Shutdown(ctx) // nolint: errcheck
 
 			// Start HTTP server
 			go func() {
@@ -334,7 +339,7 @@ func TestDeleteURL(t *testing.T) {
 			}()
 
 			// build request
-			path := "http://localhost:9000/url/" + tt.slug
+			path := getPath(port, URLShortenPath, tt.slug)
 			req, err := http.NewRequest(http.MethodDelete, path, nil)
 			require.NoError(t, err)
 			// send request to server
@@ -348,4 +353,11 @@ func TestDeleteURL(t *testing.T) {
 			require.NoError(t, err)
 		})
 	}
+}
+
+func getPath(port int, path string, slug string) string {
+	if slug == "" {
+		return fmt.Sprintf("http://localhost:%d%s", port, path)
+	}
+	return fmt.Sprintf("http://localhost:%d%s/%s", port, path, slug)
 }
