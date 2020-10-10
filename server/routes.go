@@ -47,4 +47,5 @@ func (srv HTTPServer) routes() {
 	srv.app.Put(URLShortenPath, putURL(srv.svc))
 	srv.app.Delete(URLShortenPath+"/:slug", delURL(srv.svc))
 	srv.app.Get(URLResolvePath+"/:slug", resolveURL(srv.svc))
+	srv.app.Post(URLShortenPath, shortenURL(srv.svc))
 }

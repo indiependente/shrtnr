@@ -13,6 +13,8 @@ const (
 	ErrSlugAlreadyInUse Error = `slug in use`
 	// ErrSlugNotFound is returned when trying to get or delete a slug that could not be found in the service.
 	ErrSlugNotFound Error = `slug not found`
+	// ErrURLNotFound is returned when trying to get or delete a url that could not be found in the service.
+	ErrURLNotFound Error = `url not found`
 	// ErrInvalidSlug is returned when trying to use a not valid slug.
 	ErrInvalidSlug Error = `slug not valid`
 )
@@ -29,5 +31,6 @@ func (e Error) Error() string {
 type Service interface {
 	Add(ctx context.Context, shortURL models.URLShortened) (models.URLShortened, error)
 	Get(ctx context.Context, slug string) (models.URLShortened, error)
+	Shorten(ctx context.Context, url string) (models.URLShortened, error)
 	Delete(ctx context.Context, slug string) error
 }

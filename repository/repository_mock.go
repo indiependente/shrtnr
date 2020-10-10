@@ -59,6 +59,19 @@ func (mr *MockStorerMockRecorder) Get(ctx, slug interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockStorer)(nil).Get), ctx, slug)
 }
 
+// GetURL mocks base method
+func (m *MockStorer) GetURL(ctx context.Context, url string) (models.URLShortened, error) {
+	ret := m.ctrl.Call(m, "GetURL", ctx, url)
+	ret0, _ := ret[0].(models.URLShortened)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetURL indicates an expected call of GetURL
+func (mr *MockStorerMockRecorder) GetURL(ctx, url interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetURL", reflect.TypeOf((*MockStorer)(nil).GetURL), ctx, url)
+}
+
 // Update mocks base method
 func (m *MockStorer) Update(ctx context.Context, newshortened models.URLShortened) error {
 	ret := m.ctrl.Call(m, "Update", ctx, newshortened)

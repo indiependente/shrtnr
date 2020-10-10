@@ -63,6 +63,29 @@ func (usvc URLService) increaseHitCounter(url models.URLShortened) {
 	_ = usvc.store.Update(context.Background(), url)
 }
 
+// Shorten returns the shortened URL and shortens it if not found.
+// Returns an error if any.
+func (usvc URLService) Shorten(ctx context.Context, url string) (models.URLShortened, error) {
+	var (
+		short models.URLShortened
+	)
+	short, err := usvc.store.GetURL(ctx, url)
+	if err != nil {
+		if errors.Is(err, repository.ErrURLNotFound) {
+			short.Slug = usvc.slugger.Slug()
+			err := usvc.store.Add(ctx, short)
+			if err != nil {
+				if errors.Is(err, repository.ErrSlugAlreadyInUse) {
+					return models.URLShortened{}, fmt.Errorf("could not add: %w", ErrSlugAlreadyInUse)
+				}
+				return models.URLShortened{}, fmt.Errorf("could not add: %w", err)
+			}
+		}
+		return models.URLShortened{}, fmt.Errorf("could not get: %w", err)
+	}
+	return short, nil
+}
+
 // Delete deletes the entry related to the input slug from the repository.
 func (usvc URLService) Delete(ctx context.Context, slug string) error {
 	if slug == "" {
