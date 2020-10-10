@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/indiependente/shrtnr/models"
@@ -31,7 +32,7 @@ func (usvc URLService) Add(ctx context.Context, shortURL models.URLShortened) (m
 	}
 	err := usvc.store.Add(ctx, shortURL)
 	if err != nil {
-		if err == repository.ErrSlugAlreadyInUse {
+		if errors.Is(err, repository.ErrSlugAlreadyInUse) {
 			return models.URLShortened{}, fmt.Errorf("could not add: %w", ErrSlugAlreadyInUse)
 		}
 		return models.URLShortened{}, fmt.Errorf("could not add: %w", err)
@@ -45,7 +46,7 @@ func (usvc URLService) Get(ctx context.Context, slug string) (models.URLShortene
 	}
 	url, err := usvc.store.Get(ctx, slug)
 	if err != nil {
-		if err == repository.ErrSlugNotFound {
+		if errors.Is(err, repository.ErrSlugNotFound) {
 			return models.URLShortened{}, fmt.Errorf("could not get: %w", ErrSlugNotFound)
 		}
 		return models.URLShortened{}, fmt.Errorf("could not get: %w", err)
@@ -69,7 +70,7 @@ func (usvc URLService) Delete(ctx context.Context, slug string) error {
 	}
 	err := usvc.store.Delete(ctx, slug)
 	if err != nil {
-		if err == repository.ErrSlugNotFound {
+		if errors.Is(err, repository.ErrSlugNotFound) {
 			return fmt.Errorf("could not delete: %w", ErrSlugNotFound)
 		}
 		return fmt.Errorf("could not delete: %w", err)

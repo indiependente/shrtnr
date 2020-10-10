@@ -1,99 +1,87 @@
 package server
 
 import (
+	"errors"
 	"net/http"
 
-	"github.com/gofiber/fiber"
+	"github.com/gofiber/fiber/v2"
 	"github.com/indiependente/shrtnr/models"
 	"github.com/indiependente/shrtnr/service"
 )
 
 func getURL(svc service.Service) fiber.Handler {
-	return func(c *fiber.Ctx) {
+	return func(c *fiber.Ctx) error {
 		slug := c.Params("slug")
 		url, err := svc.Get(c.Context(), slug)
 		switch {
-		case err == service.ErrSlugNotFound:
-			c.SendStatus(http.StatusNotFound)
-			return
-		case err == service.ErrInvalidSlug:
-			c.SendStatus(http.StatusBadRequest)
-			return
+		case errors.Is(err, service.ErrSlugNotFound):
+			return c.SendStatus(http.StatusNotFound)
+		case errors.Is(err, service.ErrInvalidSlug):
+			return c.SendStatus(http.StatusBadRequest)
 		case err != nil:
-			c.Status(http.StatusInternalServerError).Send(err)
-			return
+			return c.Status(http.StatusInternalServerError).SendString(err.Error())
 		default: // all good
 			if err := c.Status(http.StatusOK).JSON(url); err != nil {
-				c.Status(http.StatusInternalServerError).Send(err)
-				return
+				return c.Status(http.StatusInternalServerError).SendString(err.Error())
 			}
 		}
+		return nil
 	}
 }
 
 func putURL(svc service.Service) fiber.Handler {
-	return func(c *fiber.Ctx) {
+	return func(c *fiber.Ctx) error {
 		url := models.URLShortened{}
 		if err := c.BodyParser(&url); err != nil {
-			c.Status(http.StatusBadRequest).Send(err)
-			return
+			return c.Status(http.StatusBadRequest).SendString(err.Error())
 		}
 		newUrl, err := svc.Add(c.Context(), url)
 		switch {
-		case err == service.ErrSlugAlreadyInUse:
-			c.Status(http.StatusBadRequest).Send(err)
-			return
-		case err == service.ErrInvalidSlug:
-			c.Status(http.StatusBadRequest).Send(err)
-			return
+		case errors.Is(err, service.ErrSlugAlreadyInUse):
+			return c.Status(http.StatusBadRequest).SendString(err.Error())
+		case errors.Is(err, service.ErrInvalidSlug):
+			return c.Status(http.StatusBadRequest).SendString(err.Error())
 		case err != nil:
-			c.Status(http.StatusInternalServerError).Send(err)
-			return
+			return c.Status(http.StatusInternalServerError).SendString(err.Error())
 		default: // all good
 			if err := c.Status(http.StatusOK).JSON(newUrl); err != nil {
-				c.Status(http.StatusInternalServerError).Send(err)
-				return
+				return c.Status(http.StatusInternalServerError).SendString(err.Error())
 			}
 		}
+		return nil
 	}
 }
 
 func delURL(svc service.Service) fiber.Handler {
-	return func(c *fiber.Ctx) {
+	return func(c *fiber.Ctx) error {
 		slug := c.Params("slug")
 		err := svc.Delete(c.Context(), slug)
 		switch {
-		case err == service.ErrSlugNotFound:
-			c.SendStatus(http.StatusNotFound)
-			return
-		case err == service.ErrInvalidSlug:
-			c.SendStatus(http.StatusBadRequest)
-			return
+		case errors.Is(err, service.ErrSlugNotFound):
+			return c.SendStatus(http.StatusNotFound)
+		case errors.Is(err, service.ErrInvalidSlug):
+			return c.SendStatus(http.StatusBadRequest)
 		case err != nil:
-			c.Status(http.StatusInternalServerError).Send(err)
-			return
+			return c.Status(http.StatusInternalServerError).SendString(err.Error())
 		default: // all good
-			c.SendStatus(http.StatusOK)
+			return c.SendStatus(http.StatusOK)
 		}
 	}
 }
 
 func resolveURL(svc service.Service) fiber.Handler {
-	return func(c *fiber.Ctx) {
+	return func(c *fiber.Ctx) error {
 		slug := c.Params("slug")
 		url, err := svc.Get(c.Context(), slug)
 		switch {
-		case err == service.ErrSlugNotFound:
-			c.SendStatus(http.StatusNotFound)
-			return
-		case err == service.ErrInvalidSlug:
-			c.SendStatus(http.StatusBadRequest)
-			return
+		case errors.Is(err, service.ErrSlugNotFound):
+			return c.SendStatus(http.StatusNotFound)
+		case errors.Is(err, service.ErrInvalidSlug):
+			return c.SendStatus(http.StatusBadRequest)
 		case err != nil:
-			c.Status(http.StatusInternalServerError).Send(err)
-			return
+			return c.Status(http.StatusInternalServerError).SendString(err.Error())
 		default: // all good
-			c.Redirect(url.URL, http.StatusMovedPermanently)
+			return c.Redirect(url.URL, http.StatusMovedPermanently)
 		}
 	}
 }

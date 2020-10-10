@@ -7,7 +7,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/gofiber/fiber"
+	"github.com/gofiber/fiber/v2"
 	"github.com/indiependente/pkg/logger"
 	"github.com/indiependente/pkg/shutdown"
 	"github.com/indiependente/shrtnr/repository"
@@ -65,7 +65,7 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("could not parse PORT: %w", err)
 	}
-	app := fiber.New(&fiber.Settings{
+	app := fiber.New(fiber.Config{
 		CaseSensitive: true,
 		StrictRouting: true,
 		ServerHeader:  "Fiber",

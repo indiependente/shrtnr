@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/gofiber/fiber"
+	"github.com/gofiber/fiber/v2"
 	"github.com/golang/mock/gomock"
 	"github.com/indiependente/pkg/logger"
 	"github.com/indiependente/shrtnr/models"
@@ -89,7 +89,7 @@ func TestGetURL(t *testing.T) {
 			tt.setupExpectations(mockSvc)
 
 			port := 12345
-			app := fiber.New(&fiber.Settings{
+			app := fiber.New(fiber.Config{
 				CaseSensitive:    true,
 				StrictRouting:    true,
 				ServerHeader:     "Fiber",
@@ -218,7 +218,7 @@ func TestPutURL(t *testing.T) {
 			tt.setupExpectations(mockSvc)
 
 			port := 12346
-			app := fiber.New(&fiber.Settings{
+			app := fiber.New(fiber.Config{
 				CaseSensitive:    true,
 				StrictRouting:    true,
 				ServerHeader:     "Fiber",
@@ -319,7 +319,7 @@ func TestDeleteURL(t *testing.T) {
 			tt.setupExpectations(mockSvc)
 
 			port := 12347
-			app := fiber.New(&fiber.Settings{
+			app := fiber.New(fiber.Config{
 				CaseSensitive:    true,
 				StrictRouting:    true,
 				ServerHeader:     "Fiber",
