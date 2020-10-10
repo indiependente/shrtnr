@@ -375,7 +375,7 @@ func TestMongoDBURLStorer_GetURL(t *testing.T) {
 				return nil
 			},
 			wantURL: models.URLShortened{},
-			err:     ErrSlugNotFound,
+			err:     ErrURLNotFound,
 		},
 	}
 	for _, tt := range tests {
@@ -414,7 +414,7 @@ func TestMongoDBURLStorer_GetURL(t *testing.T) {
 			// create store and test Get
 			store := NewMongoDBURLStorer(coll)
 			// delete url
-			url, err := store.Get(ctx, tt.slug)
+			url, err := store.GetURL(ctx, tt.url)
 			require.True(t, errors.Is(err, tt.err))
 			require.Equal(t, tt.wantURL, url)
 		})
