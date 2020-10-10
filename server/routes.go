@@ -4,8 +4,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/go-openapi/strfmt"
-	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/compress"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/pprof"
@@ -49,14 +47,4 @@ func (srv HTTPServer) routes() {
 	srv.app.Put(URLShortenPath, putURL(srv.svc))
 	srv.app.Delete(URLShortenPath+"/:slug", delURL(srv.svc))
 	srv.app.Get(URLResolvePath+"/:slug", resolveURL(srv.svc))
-}
-
-// RequestLogger logs the request
-func (srv HTTPServer) RequestLogger(c *fiber.Ctx) error {
-	method := string(c.Request().Header.Method())
-	url := string(c.Request().Header.RequestURI())
-	status := c.Response().Header.StatusCode()
-	reqID := c.Response().Header.Peek("X-Request-Id")
-	srv.log.Event(url).StatusCode(status).RequestID(strfmt.UUID(reqID)).Info(method)
-	return c.Next()
 }
