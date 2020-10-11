@@ -10,3 +10,4 @@ db.createUser(
         ],
     },
 );
+db.getCollection('urls').createIndex({ "url": 1 });

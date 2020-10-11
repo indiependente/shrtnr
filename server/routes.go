@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2/middleware/compress"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/pprof"
 	"github.com/gofiber/fiber/v2/middleware/recover"
@@ -16,7 +17,7 @@ const (
 	// URLShortenPath is the path used to perform CRUD ops on urls.
 	URLShortenPath = `/url`
 	// URLResolvePath is the path used to resolve shortened urls.
-	URLResolvePath = `/resolve`
+	URLResolvePath = `/r`
 )
 
 func (srv HTTPServer) middlewares() {
@@ -28,7 +29,7 @@ func (srv HTTPServer) middlewares() {
 			return uuid.New().String()
 		},
 	}))
-
+	srv.app.Use(cors.New())
 	// Default middleware config
 	srv.app.Use(logger.New(logger.Config{
 		Format: "{\"time\": \"${time}\", \"referer\": \"${referer}\", \"protocol\": \"${protocol}\"," +

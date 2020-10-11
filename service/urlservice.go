@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/indiependente/shrtnr/models"
 	"github.com/indiependente/shrtnr/repository"
@@ -66,23 +67,25 @@ func (usvc URLService) increaseHitCounter(url models.URLShortened) {
 // Shorten returns the shortened URL and shortens it if not found.
 // Returns an error if any.
 func (usvc URLService) Shorten(ctx context.Context, url string) (models.URLShortened, error) {
-	var (
-		short models.URLShortened
-	)
-	short, err := usvc.store.GetURL(ctx, url)
+	url = fixURL(url)
+	short, err := usvc.store.GetURL(ctx, url) // try to get from repo
 	if err != nil {
-		if errors.Is(err, repository.ErrURLNotFound) {
-			short.Slug = usvc.slugger.Slug()
-			err := usvc.store.Add(ctx, short)
-			if err != nil {
-				if errors.Is(err, repository.ErrSlugAlreadyInUse) {
-					return models.URLShortened{}, fmt.Errorf("could not add: %w", ErrSlugAlreadyInUse)
-				}
-				return models.URLShortened{}, fmt.Errorf("could not add: %w", err)
-			}
+		if !errors.Is(err, repository.ErrURLNotFound) {
+			return models.URLShortened{}, fmt.Errorf("could not shorten: %w", err)
 		}
-		return models.URLShortened{}, fmt.Errorf("could not get: %w", err)
+		// create if not found
+		short.URL = url
+		short.Slug = usvc.slugger.Slug()
+		err := usvc.store.Add(ctx, short)
+		if err != nil {
+			if errors.Is(err, repository.ErrSlugAlreadyInUse) {
+				return models.URLShortened{}, fmt.Errorf("could not add: %w", ErrSlugAlreadyInUse)
+			}
+			return models.URLShortened{}, fmt.Errorf("could not add: %w", err)
+		}
 	}
+	// increase hit counter and store the updated value
+	go usvc.increaseHitCounter(short)
 	return short, nil
 }
 
@@ -99,4 +102,11 @@ func (usvc URLService) Delete(ctx context.Context, slug string) error {
 		return fmt.Errorf("could not delete: %w", err)
 	}
 	return nil
+}
+
+func fixURL(url string) string {
+	if !strings.HasPrefix(url, "http") {
+		url = "http://" + url
+	}
+	return url
 }
