@@ -53,7 +53,7 @@ func (m MongoDBURLStorer) Add(ctx context.Context, shortened models.URLShortened
 	return nil
 }
 
-// Get gets a shortened url from the mongodb repository.
+// Get gets a original url using the slug from the mongodb repository.
 // Returns an error if any.
 func (m MongoDBURLStorer) Get(ctx context.Context, slug string) (models.URLShortened, error) {
 	var shortURL mongoURLShortened
@@ -61,6 +61,20 @@ func (m MongoDBURLStorer) Get(ctx context.Context, slug string) (models.URLShort
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return models.URLShortened{}, ErrSlugNotFound
+		}
+		return models.URLShortened{}, fmt.Errorf("unexpected error: %w", err)
+	}
+	return toModel(shortURL), nil
+}
+
+// GetURL gets a shortened url from the mongodb repository.
+// Returns an error if any.
+func (m MongoDBURLStorer) GetURL(ctx context.Context, url string) (models.URLShortened, error) {
+	var shortURL mongoURLShortened
+	err := m.urls.FindOne(ctx, bson.D{{Key: "url", Value: url}}).Decode(&shortURL)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return models.URLShortened{}, ErrURLNotFound
 		}
 		return models.URLShortened{}, fmt.Errorf("unexpected error: %w", err)
 	}

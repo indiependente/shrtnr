@@ -13,6 +13,8 @@ const (
 	ErrSlugAlreadyInUse Error = `slug in use`
 	// ErrSlugNotFound is returned when trying to retrieve a slug that could not be found in the repository.
 	ErrSlugNotFound Error = `slug not found`
+	// ErrURLNotFound is returned when trying to retrieve a URL that could not be found in the repository.
+	ErrURLNotFound Error = `url not found`
 )
 
 // Error represents an error returned by the repository.
@@ -27,6 +29,7 @@ func (e Error) Error() string {
 type Storer interface {
 	Add(ctx context.Context, shortened models.URLShortened) error
 	Get(ctx context.Context, slug string) (models.URLShortened, error)
+	GetURL(ctx context.Context, url string) (models.URLShortened, error)
 	Update(ctx context.Context, newshortened models.URLShortened) error
 	Delete(ctx context.Context, slug string) error
 }

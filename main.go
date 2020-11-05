@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 
+	rice "github.com/GeertJohan/go.rice"
 	"github.com/gofiber/fiber/v2"
 	"github.com/indiependente/pkg/logger"
 	"github.com/indiependente/pkg/shutdown"
@@ -70,7 +71,14 @@ func run() error {
 		StrictRouting: true,
 		ServerHeader:  "Fiber",
 	})
-	srv := server.NewHTTPServer(app, svc, port, log)
+	box, err := rice.FindBox("./frontend/dist")
+	if err != nil {
+		return fmt.Errorf("could not find box: %w", err)
+	}
+	srv, err := server.NewHTTPServer(app, svc, port, box.HTTPBox(), log)
+	if err != nil {
+		return fmt.Errorf("error while creating server: %w", err)
+	}
 	err = srv.Setup(ctx)
 	if err != nil {
 		return fmt.Errorf("error while running server setup: %w", err)

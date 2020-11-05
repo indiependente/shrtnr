@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/indiependente/pkg/logger"
@@ -11,20 +12,22 @@ import (
 
 // HTTPServer implements a Server capable of serving HTTP requests.
 type HTTPServer struct {
-	app  *fiber.App
-	svc  service.Service
-	port int
-	log  logger.Logger
+	app    *fiber.App
+	svc    service.Service
+	port   int
+	log    logger.Logger
+	assets http.FileSystem
 }
 
 // NewHTTPServer returns a new instance of an HTTPServer.
-func NewHTTPServer(app *fiber.App, svc service.Service, port int, log logger.Logger) HTTPServer {
+func NewHTTPServer(app *fiber.App, svc service.Service, port int, assets http.FileSystem, log logger.Logger) (HTTPServer, error) {
 	return HTTPServer{
-		app:  app,
-		svc:  svc,
-		port: port,
-		log:  log,
-	}
+		app:    app,
+		svc:    svc,
+		port:   port,
+		log:    log,
+		assets: assets,
+	}, nil
 }
 
 // Start starts the HTTP server.

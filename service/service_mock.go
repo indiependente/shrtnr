@@ -60,6 +60,19 @@ func (mr *MockServiceMockRecorder) Get(ctx, slug interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockService)(nil).Get), ctx, slug)
 }
 
+// Shorten mocks base method
+func (m *MockService) Shorten(ctx context.Context, url string) (models.URLShortened, error) {
+	ret := m.ctrl.Call(m, "Shorten", ctx, url)
+	ret0, _ := ret[0].(models.URLShortened)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Shorten indicates an expected call of Shorten
+func (mr *MockServiceMockRecorder) Shorten(ctx, url interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Shorten", reflect.TypeOf((*MockService)(nil).Shorten), ctx, url)
+}
+
 // Delete mocks base method
 func (m *MockService) Delete(ctx context.Context, slug string) error {
 	ret := m.ctrl.Call(m, "Delete", ctx, slug)

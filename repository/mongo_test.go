@@ -340,3 +340,83 @@ func TestMongoDBURLStorer_Update(t *testing.T) {
 		})
 	}
 }
+
+func TestMongoDBURLStorer_GetURL(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name            string
+		url             string
+		setupCollection func(ctx context.Context, coll *mongo.Collection) error
+		wantURL         models.URLShortened
+		err             error
+	}{
+		{
+			name: "Happy path",
+			url:  "https://shrtnr.dev",
+			setupCollection: func(ctx context.Context, coll *mongo.Collection) error {
+				_, err := coll.InsertOne(ctx, toMongo(models.URLShortened{
+					URL:  "https://shrtnr.dev",
+					Slug: "aeiou",
+					Hits: 0,
+				}))
+				return err
+			},
+			wantURL: models.URLShortened{
+				URL:  "https://shrtnr.dev",
+				Slug: "aeiou",
+				Hits: 0,
+			},
+			err: nil,
+		},
+		{
+			name: "Sad path - slug not found",
+			url:  "https://shrtnr.dev",
+			setupCollection: func(ctx context.Context, coll *mongo.Collection) error {
+				return nil
+			},
+			wantURL: models.URLShortened{},
+			err:     ErrURLNotFound,
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			// *** START DB SETUP ***
+			rand.Seed(time.Now().UnixNano())
+			client, err := mongo.NewClient(options.Client().ApplyURI(uri))
+			require.NoError(t, err)
+			ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+			defer cancel()
+			err = client.Connect(ctx)
+			require.NoError(t, err)
+			defer client.Disconnect(ctx) // nolint: errcheck
+			db := client.Database("shrtnr")
+			// create collection
+			coll := db.Collection(fmt.Sprintf("urls_test_geturl_%d%d", time.Now().UnixNano(), rand.Int()))
+			defer coll.Drop(ctx) // nolint: errcheck
+			// add indexes
+			models := []mongo.IndexModel{
+				{
+					Keys: bson.D{{Key: "slug", Value: 1}},
+				},
+				{
+					Keys: bson.D{{Key: "url", Value: 1}},
+				},
+			}
+			opts := options.CreateIndexes().SetMaxTime(2 * time.Second)
+			_, err = coll.Indexes().CreateMany(ctx, models, opts)
+			require.NoError(t, err)
+			defer coll.Indexes().DropAll(ctx) // nolint: errcheck
+			// run additional collection setup func
+			err = tt.setupCollection(ctx, coll)
+			require.NoError(t, err)
+			// *** END DB SETUP ***
+			// create store and test Get
+			store := NewMongoDBURLStorer(coll)
+			// delete url
+			url, err := store.GetURL(ctx, tt.url)
+			require.True(t, errors.Is(err, tt.err))
+			require.Equal(t, tt.wantURL, url)
+		})
+	}
+}

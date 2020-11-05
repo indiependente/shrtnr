@@ -85,3 +85,21 @@ func resolveURL(svc service.Service) fiber.Handler {
 		}
 	}
 }
+
+func shortenURL(svc service.Service) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		var url models.URLShortened
+		err := c.BodyParser(&url)
+		if err != nil {
+			return c.SendStatus(http.StatusInternalServerError)
+		}
+		short, err := svc.Shorten(c.Context(), url.URL)
+		if err != nil {
+			return c.Status(http.StatusInternalServerError).SendString(err.Error())
+		}
+		if err := c.Status(http.StatusOK).JSON(short); err != nil {
+			return c.Status(http.StatusInternalServerError).SendString(err.Error())
+		}
+		return nil
+	}
+}
