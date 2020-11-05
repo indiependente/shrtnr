@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"testing"
 
+	rice "github.com/GeertJohan/go.rice"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang/mock/gomock"
 	"github.com/indiependente/pkg/logger"
@@ -95,8 +96,11 @@ func TestGetURL(t *testing.T) {
 				ServerHeader:     "Fiber",
 				DisableKeepalive: true, // this is needed to avoid the shutdown being stuck for 30-60 seconds
 			})
-			srv := NewHTTPServer(app, mockSvc, port, logger.GetLogger("test", logger.DISABLED))
-			err := srv.Setup(ctx)
+			box, err := rice.FindBox(".")
+			require.NoError(t, err)
+			srv, err := NewHTTPServer(app, mockSvc, port, box.HTTPBox(), logger.GetLogger("test", logger.DISABLED))
+			require.NoError(t, err)
+			err = srv.Setup(ctx)
 			require.NoError(t, err)
 			defer srv.Shutdown(ctx) // nolint: errcheck
 			// Start HTTP server
@@ -224,8 +228,11 @@ func TestPutURL(t *testing.T) {
 				ServerHeader:     "Fiber",
 				DisableKeepalive: true, // this is needed to avoid the shutdown being stuck for 30-60 seconds
 			})
-			srv := NewHTTPServer(app, mockSvc, port, logger.GetLogger("test", logger.DISABLED))
-			err := srv.Setup(ctx)
+			box, err := rice.FindBox(".")
+			require.NoError(t, err)
+			srv, err := NewHTTPServer(app, mockSvc, port, box.HTTPBox(), logger.GetLogger("test", logger.DISABLED))
+			require.NoError(t, err)
+			err = srv.Setup(ctx)
 			require.NoError(t, err)
 			defer srv.Shutdown(ctx) // nolint: errcheck
 			// Start HTTP server
@@ -325,8 +332,11 @@ func TestDeleteURL(t *testing.T) {
 				ServerHeader:     "Fiber",
 				DisableKeepalive: true, // this is needed to avoid the shutdown being stuck for 30-60 seconds
 			})
-			srv := NewHTTPServer(app, mockSvc, port, logger.GetLogger("test", logger.DISABLED))
-			err := srv.Setup(ctx)
+			box, err := rice.FindBox(".")
+			require.NoError(t, err)
+			srv, err := NewHTTPServer(app, mockSvc, port, box.HTTPBox(), logger.GetLogger("test", logger.DISABLED))
+			require.NoError(t, err)
+			err = srv.Setup(ctx)
 			require.NoError(t, err)
 			defer srv.Shutdown(ctx) // nolint: errcheck
 

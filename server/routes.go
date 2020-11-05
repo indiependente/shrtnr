@@ -6,6 +6,7 @@ import (
 
 	"github.com/gofiber/fiber/v2/middleware/compress"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/filesystem"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/pprof"
 	"github.com/gofiber/fiber/v2/middleware/recover"
@@ -30,6 +31,9 @@ func (srv HTTPServer) middlewares() {
 		},
 	}))
 	srv.app.Use(cors.New())
+	srv.app.Use("/", filesystem.New(filesystem.Config{
+		Root: srv.assets,
+	}))
 	// Default middleware config
 	srv.app.Use(logger.New(logger.Config{
 		Format: "{\"time\": \"${time}\", \"referer\": \"${referer}\", \"protocol\": \"${protocol}\"," +
