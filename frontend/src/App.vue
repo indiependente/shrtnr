@@ -40,13 +40,20 @@
           <span style="font-size: 150%">
             <a :href="shortenedURL">{{ shortenedURL }} </a>
           </span>
-          <button
+          <b-icon
+            icon="clipboard"
+            type="button"
+            v-show="showResult"
+            v-clipboard:copy="shortenedURL"
+            @click="doCopy"
+          ></b-icon>
+          <!-- <button
             class="btn btn-primary"
             v-show="showResult"
             v-clipboard:copy="shortenedURL"
-          >
-            Copy
-          </button>
+          > -->
+          <!-- Copy -->
+          <!-- </button> -->
         </div>
       </div>
     </div>
@@ -56,10 +63,11 @@
 <script>
 import axios from "axios";
 export default {
-  name: "App",
+  name: process.env.VUE_APP_TITLE || "App",
 
   data() {
     return {
+      baseURL: process.env.BASE_URL || "http://localhost:7000/",
       websiteUrl: "",
       shortenedURL: "",
       showResult: false,
@@ -76,16 +84,26 @@ export default {
 
       console.log(`shortening ${this.websiteUrl}`);
       axios
-        .post("http://sho.rt:7000/url", {
+        .post("/url", {
           url: this.websiteUrl,
         })
         .then((response) => {
-          this.shortenedURL = "http://sho.rt:7000/r/" + response.data.slug;
+          this.shortenedURL = this.baseURL + "r/" + response.data.slug;
           this.showResult = true;
         })
         .catch((error) => {
           window.alert(`The API returned an error: ${error}`);
         });
+    },
+    doCopy: function () {
+      this.$copyText(this.shortenedURL).then(
+        (e) => {
+          console.log(e.text + " copied to clipboard");
+        },
+        (e) => {
+          console.log("could not copy: " + e.text);
+        }
+      );
     },
   },
 };
