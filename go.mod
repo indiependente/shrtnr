@@ -9,7 +9,7 @@ require (
 	github.com/go-openapi/strfmt v0.19.6 // indirect
 	github.com/gofiber/fiber/v2 v2.0.6
 	github.com/golang/mock v1.4.4
-	github.com/google/uuid v1.1.2
+	github.com/google/uuid v1.3.0
 	github.com/indiependente/pkg v0.1.1
 	github.com/mitchellh/mapstructure v1.3.3 // indirect
 	github.com/stretchr/testify v1.6.1
