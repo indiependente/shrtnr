@@ -7,8 +7,9 @@ require (
 	github.com/asaskevich/govalidator v0.0.0-20200907205600-7a23bdc65eef // indirect
 	github.com/go-openapi/errors v0.19.7 // indirect
 	github.com/go-openapi/strfmt v0.19.6 // indirect
-	github.com/gofiber/fiber/v2 v2.26.0
+	github.com/gofiber/fiber/v2 v2.27.0
 	github.com/golang/mock v1.6.0
+	github.com/golang/snappy v0.0.3 // indirect
 	github.com/google/uuid v1.3.0
 	github.com/indiependente/pkg v0.1.1
 	github.com/mitchellh/mapstructure v1.3.3 // indirect
