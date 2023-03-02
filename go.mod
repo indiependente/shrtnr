@@ -19,7 +19,7 @@ require (
 	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/rs/zerolog v1.29.0 // indirect
 	github.com/savsgio/gotils v0.0.0-20230208104028-c358bd845dee // indirect
-	github.com/stretchr/testify v1.8.0
+	github.com/stretchr/testify v1.8.2
 	github.com/tinylib/msgp v1.1.8 // indirect
 	github.com/xdg-go/scram v1.1.2 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
