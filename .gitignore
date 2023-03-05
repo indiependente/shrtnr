@@ -19,3 +19,7 @@ bin/
 
 # env vars
 .env
+
+# IDE settings
+.vscode
+.idea

@@ -1,17 +1,9 @@
 package server
 
 import (
-	"os"
-	"time"
+	"net/http"
 
-	"github.com/gofiber/fiber/v2/middleware/compress"
-	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/filesystem"
-	"github.com/gofiber/fiber/v2/middleware/logger"
-	"github.com/gofiber/fiber/v2/middleware/pprof"
-	"github.com/gofiber/fiber/v2/middleware/recover"
-	"github.com/gofiber/fiber/v2/middleware/requestid"
-	"github.com/google/uuid"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 const (
@@ -22,35 +14,20 @@ const (
 )
 
 func (srv HTTPServer) middlewares() {
-	srv.app.Use(compress.New())
-	srv.app.Use(recover.New())
-	srv.app.Use(pprof.New())
-	srv.app.Use(requestid.New(requestid.Config{
-		Generator: func() string {
-			return uuid.New().String()
-		},
-	}))
-	srv.app.Use(cors.New())
-	srv.app.Use("/", filesystem.New(filesystem.Config{
-		Root: srv.assets,
-	}))
-	// Default middleware config
-	srv.app.Use(logger.New(logger.Config{
-		Format: "{\"time\": \"${time}\", \"referer\": \"${referer}\", \"protocol\": \"${protocol}\"," +
-			" \"ip\": \"${ip}\", \"host\": \"${host}\", \"method\": \"${method}\", \"header\":\"${header:x-request-id}\"," +
-			"\"url\": \"${url}\", \"ua\": \"${ua}\", \"latency\": \"${latency}\", \"status\": \"${status}\", \"body\": \"${body}\", " +
-			"\"bytesSent\": \"${bytesSent}\", \"bytesReceived\": \"${bytesReceived}\", \"route\": \"${route}\", \"error\": \"${error}\"}\n",
-		TimeFormat: time.RFC3339Nano,
-		TimeZone:   "Local",
-		Output:     os.Stdout,
-	}))
+	srv.router.Use()
+	srv.router.Use(middleware.Compress(5, "application/json"))
+	srv.router.Use(middleware.RealIP)
+	srv.router.Use(middleware.RequestID)
+	srv.router.Use(middleware.Recoverer)
+	srv.router.Use(middleware.RequestLogger(&middleware.DefaultLogFormatter{}))
 
 }
 
 func (srv HTTPServer) routes() {
-	srv.app.Get(URLShortenPath+"/:slug", getURL(srv.svc))
-	srv.app.Put(URLShortenPath, putURL(srv.svc))
-	srv.app.Delete(URLShortenPath+"/:slug", delURL(srv.svc))
-	srv.app.Get(URLResolvePath+"/:slug", resolveURL(srv.svc))
-	srv.app.Post(URLShortenPath, shortenURL(srv.svc))
+	srv.router.Handle("/*", http.FileServer(srv.assets))
+	srv.router.Get(URLShortenPath+"/:slug", srv.getURL())
+	srv.router.Put(URLShortenPath, srv.putURL())
+	srv.router.Delete(URLShortenPath+"/:slug", srv.delURL())
+	srv.router.Get(URLResolvePath+"/:slug", srv.resolveURL())
+	srv.router.Post(URLShortenPath, srv.shortenURL())
 }

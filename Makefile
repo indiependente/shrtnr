@@ -1,12 +1,10 @@
-LINTER_VERSION=1.33.0
-
 .PHONY:all
-all: lint test build
+all: ui lint test build
 
-.PHONY:frontend
-frontend:
-	cd frontend && \
-	yarn build --mode development && \
+.PHONY:ui
+ui:
+	cd ui && \
+	npm run build && \
 	cd -
 
 .PHONY:lint
@@ -15,21 +13,27 @@ lint:
 
 .PHONY:test
 test:
-	go test -v ./...
+	go test -v -race ./...
 
 .PHONY:build
 build:
-	rice embed-go
 	CGO_ENABLED=0 go build -o bin/shrtnr main.go
-	rm rice-box.go
 
 .PHONY:docker
 docker:
 	docker build . -t indiependente/shrtnr
 
-
 .PHONY:deps
 deps:
 	go mod download
-	go get github.com/GeertJohan/go.rice
-	go get github.com/GeertJohan/go.rice/rice
+
+## Starts the service locally ( all required components )
+.PHONY:start
+start: docker
+	docker compose -p shrtnr \
+	up --force-recreate --no-deps -d
+
+## Stops the running local service and all its dependencies
+.PHONY:stop
+stop:
+	@ docker compose -p shrtnr down --remove-orphans

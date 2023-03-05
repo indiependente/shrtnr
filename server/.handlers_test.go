@@ -3,6 +3,7 @@ package server
 import (
 	"bytes"
 	"context"
+	"embed"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -10,7 +11,6 @@ import (
 	"net/http"
 	"testing"
 
-	rice "github.com/GeertJohan/go.rice"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang/mock/gomock"
 	"github.com/indiependente/pkg/logger"
@@ -18,6 +18,9 @@ import (
 	"github.com/indiependente/shrtnr/service"
 	"github.com/stretchr/testify/require"
 )
+
+//go:embed *
+var assets embed.FS
 
 func TestGetURL(t *testing.T) {
 	t.Parallel()
@@ -96,9 +99,7 @@ func TestGetURL(t *testing.T) {
 				ServerHeader:     "Fiber",
 				DisableKeepalive: true, // this is needed to avoid the shutdown being stuck for 30-60 seconds
 			})
-			box, err := rice.FindBox(".")
-			require.NoError(t, err)
-			srv, err := NewHTTPServer(app, mockSvc, port, box.HTTPBox(), logger.GetLogger("test", logger.DISABLED))
+			srv, err := NewHTTPServer(app, mockSvc, port, http.FS(assets), logger.GetLogger("test", logger.DISABLED))
 			require.NoError(t, err)
 			err = srv.Setup(ctx)
 			require.NoError(t, err)
@@ -182,7 +183,7 @@ func TestPutURL(t *testing.T) {
 			want:       models.URLShortened{},
 		},
 		{
-			name: "Sad path - Slug not valid",
+			name: "Sad path - slug not valid",
 			url: models.URLShortened{
 				URL:  "http://pizza.com",
 				Slug: "pizza",
@@ -197,7 +198,7 @@ func TestPutURL(t *testing.T) {
 			want:       models.URLShortened{},
 		},
 		{
-			name: "Sad path - Unexpected error",
+			name: "Sad path - unexpected error",
 			url: models.URLShortened{
 				URL:  "http://pizza.com",
 				Slug: "pizza",
@@ -221,27 +222,11 @@ func TestPutURL(t *testing.T) {
 			mockSvc := service.NewMockService(ctrl)
 			tt.setupExpectations(mockSvc)
 
-			port := 12346
-			app := fiber.New(fiber.Config{
-				CaseSensitive:    true,
-				StrictRouting:    true,
-				ServerHeader:     "Fiber",
-				DisableKeepalive: true, // this is needed to avoid the shutdown being stuck for 30-60 seconds
-			})
-			box, err := rice.FindBox(".")
-			require.NoError(t, err)
-			srv, err := NewHTTPServer(app, mockSvc, port, box.HTTPBox(), logger.GetLogger("test", logger.DISABLED))
-			require.NoError(t, err)
-			err = srv.Setup(ctx)
-			require.NoError(t, err)
-			defer srv.Shutdown(ctx) // nolint: errcheck
-			// Start HTTP server
-			go func() {
-				err := srv.Start(ctx)
-				if err != nil {
-					t.Error(err)
-				}
-			}()
+			srv := HTTPServer{
+				svc: mockSvc,
+				log: logger.GetLogger("test", logger.DISABLED),
+			}
+			h := srv.putURL()
 
 			// build request
 			path := getPath(port, URLShortenPath, "")
@@ -332,9 +317,8 @@ func TestDeleteURL(t *testing.T) {
 				ServerHeader:     "Fiber",
 				DisableKeepalive: true, // this is needed to avoid the shutdown being stuck for 30-60 seconds
 			})
-			box, err := rice.FindBox(".")
-			require.NoError(t, err)
-			srv, err := NewHTTPServer(app, mockSvc, port, box.HTTPBox(), logger.GetLogger("test", logger.DISABLED))
+
+			srv, err := NewHTTPServer(app, mockSvc, port, http.FS(assets), logger.GetLogger("test", logger.DISABLED))
 			require.NoError(t, err)
 			err = srv.Setup(ctx)
 			require.NoError(t, err)

@@ -9,10 +9,10 @@ import (
 	"github.com/indiependente/shrtnr/service"
 )
 
-func getURL(svc service.Service) fiber.Handler {
-	return func(c *fiber.Ctx) error {
+func (srv HTTPServer) getURL() http.HandlerFunc {
+	return func(w http.ResponseWriter) {
 		slug := c.Params("slug")
-		url, err := svc.Get(c.Context(), slug)
+		url, err := srv.svc.Get(c.Context(), slug)
 		switch {
 		case errors.Is(err, service.ErrSlugNotFound):
 			return c.SendStatus(http.StatusNotFound)
@@ -29,13 +29,13 @@ func getURL(svc service.Service) fiber.Handler {
 	}
 }
 
-func putURL(svc service.Service) fiber.Handler {
+func (srv HTTPServer) putURL() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		url := models.URLShortened{}
 		if err := c.BodyParser(&url); err != nil {
 			return c.Status(http.StatusBadRequest).SendString(err.Error())
 		}
-		newUrl, err := svc.Add(c.Context(), url)
+		newUrl, err := srv.svc.Add(c.Context(), url)
 		switch {
 		case errors.Is(err, service.ErrSlugAlreadyInUse):
 			return c.Status(http.StatusBadRequest).SendString(err.Error())
@@ -52,10 +52,10 @@ func putURL(svc service.Service) fiber.Handler {
 	}
 }
 
-func delURL(svc service.Service) fiber.Handler {
+func (srv HTTPServer) delURL() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		slug := c.Params("slug")
-		err := svc.Delete(c.Context(), slug)
+		err := srv.svc.Delete(c.Context(), slug)
 		switch {
 		case errors.Is(err, service.ErrSlugNotFound):
 			return c.SendStatus(http.StatusNotFound)
@@ -69,10 +69,10 @@ func delURL(svc service.Service) fiber.Handler {
 	}
 }
 
-func resolveURL(svc service.Service) fiber.Handler {
+func (srv HTTPServer) resolveURL() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		slug := c.Params("slug")
-		url, err := svc.Get(c.Context(), slug)
+		url, err := srv.svc.Get(c.Context(), slug)
 		switch {
 		case errors.Is(err, service.ErrSlugNotFound):
 			return c.SendStatus(http.StatusNotFound)
@@ -86,14 +86,14 @@ func resolveURL(svc service.Service) fiber.Handler {
 	}
 }
 
-func shortenURL(svc service.Service) fiber.Handler {
+func (srv HTTPServer) shortenURL() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var url models.URLShortened
 		err := c.BodyParser(&url)
 		if err != nil {
 			return c.SendStatus(http.StatusInternalServerError)
 		}
-		short, err := svc.Shorten(c.Context(), url.URL)
+		short, err := srv.svc.Shorten(c.Context(), url.URL)
 		if err != nil {
 			return c.Status(http.StatusInternalServerError).SendString(err.Error())
 		}

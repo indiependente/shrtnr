@@ -1,0 +1,40 @@
+{
+	"name": "VueGo",
+	"dockerFile": "Dockerfile",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"2gua.rainbow-brackets",
+				"alexdima.copy-relative-path",
+				"benjaminadk.emojis4git",
+				"britesnow.vscode-toggle-quotes",
+				"christian-kohler.path-intellisense",
+				"davidanson.vscode-markdownlint",
+				"dbaeumer.vscode-eslint",
+				"editorconfig.editorconfig",
+				"eg2.vscode-npm-script",
+				"esbenp.prettier-vscode",
+				"formulahendry.auto-rename-tag",
+				"jerryhong.autofilename",
+				"naumovs.color-highlight",
+				"robinbentley.sass-indented",
+				"shinnn.stylelint",
+				"streetsidesoftware.code-spell-checker",
+				"waderyan.gitblame",
+				"yzhang.markdown-all-in-one"
+			],
+			"settings": {
+				"editor.formatOnSave": true,
+				"files.eol": "\n",
+				"prettier.requireConfig": true
+			}
+		}
+	},
+	"forwardPorts": [
+		7000
+	],
+	"postCreateCommand": "cd frontend && npm install && npm run build",
+	"features": {
+		"golang": "latest"
+	}
+}
