@@ -17,11 +17,11 @@ test:
 
 .PHONY:build
 build:
-	CGO_ENABLED=0 go build -o bin/shrtnr main.go
+	CGO_ENABLED=0 go build -o bin/shrtnr .
 
 .PHONY:docker
 docker:
-	docker build . -t indiependente/shrtnr
+	docker build --no-cache -t indiependente/shrtnr -f Dockerfile .
 
 .PHONY:deps
 deps:
@@ -31,7 +31,7 @@ deps:
 .PHONY:start
 start: docker
 	docker compose -p shrtnr \
-	up --force-recreate --no-deps -d
+	up -d --build --no-recreate --remove-orphans
 
 ## Stops the running local service and all its dependencies
 .PHONY:stop

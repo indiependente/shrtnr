@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/indiependente/pkg/logger"
@@ -20,30 +21,31 @@ type HTTPServer struct {
 }
 
 // NewHTTPServer returns a new instance of an HTTPServer.
-func NewHTTPServer(r chi.Router, svc service.Service, addr string, assets http.FileSystem, log logger.Logger) (HTTPServer, error) {
-	return HTTPServer{
+func NewHTTPServer(r chi.Router, svc service.Service, addr string, assets http.FileSystem, log logger.Logger) (*HTTPServer, error) {
+	s := &HTTPServer{
 		router: r,
 		svc:    svc,
 		addr:   addr,
 		log:    log,
 		assets: assets,
-	}, nil
+		Server: http.Server{
+			Addr:              ":" + addr,
+			ReadHeaderTimeout: time.Second,
+		},
+	}
+	s.middlewares(log)
+	s.routes()
+	s.Server.Handler = s.router
+
+	return s, nil
 }
 
 // Start starts the HTTP server.
-func (srv HTTPServer) Start(ctx context.Context) error {
-	return http.ListenAndServe(srv.addr, srv.router)
+func (srv *HTTPServer) Start(ctx context.Context) error {
+	return srv.ListenAndServe()
 }
 
 // Shutdown stops the HTTP server.
-func (srv HTTPServer) Shutdown(ctx context.Context) error {
-	return srv.Shutdown(ctx)
-}
-
-// Setup applies all the server configurations enabling startup.
-func (srv HTTPServer) Setup(context.Context) error {
-	srv.middlewares()
-	srv.routes()
-
-	return nil
+func (srv *HTTPServer) Shutdown(ctx context.Context) error {
+	return srv.Server.Shutdown(ctx)
 }

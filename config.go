@@ -9,7 +9,7 @@ type config struct {
 	MongoDBHost       string `env:"MONGODB_HOST" envDefault:"localhost"`
 	MongoDBName       string `env:"MONGODB_DBNAME" envDefault:"shrtnr"`
 	MongoDBCollection string `env:"MONGODB_COLLECTION" envDefault:"urls"`
-	Port              int    `env:"PORT" envDefault:"7000"`
+	Port              string `env:"PORT" envDefault:"7000"`
 	SlugLen           int    `env:"SLUG_LEN" envDefault:"5"`
 }
 

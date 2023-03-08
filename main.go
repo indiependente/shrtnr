@@ -3,10 +3,11 @@ package main
 import (
 	"context"
 	"embed"
+	"errors"
 	"fmt"
+	"io/fs"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/indiependente/pkg/logger"
@@ -14,7 +15,6 @@ import (
 	"github.com/indiependente/shrtnr/repository"
 	"github.com/indiependente/shrtnr/server"
 	"github.com/indiependente/shrtnr/service"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -22,7 +22,7 @@ import (
 
 const (
 	appName        = "shrtnr"
-	mongoDBTimeout = 2
+	mongoDBTimeout = 5
 )
 
 //go:embed ui/dist
@@ -35,7 +35,7 @@ func main() {
 	}
 }
 
-func run() error { //nolint:funlen,cyclop
+func run() error { //nolint:funlen
 	log := logger.GetLoggerString(appName, "DEBUG")
 	conf, err := parseConfig()
 	if err != nil {
@@ -50,7 +50,8 @@ func run() error { //nolint:funlen,cyclop
 		DB:         conf.MongoDBName,
 		Collection: conf.MongoDBCollection,
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), mongoDBTimeout*time.Second)
+
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoConf.URI()))
@@ -67,18 +68,6 @@ func run() error { //nolint:funlen,cyclop
 
 	// create store
 	coll := db.Collection(mongoConf.Collection)
-	cur, err := coll.Find(ctx, bson.D{})
-	if err != nil {
-		return err
-	}
-	var results []any
-	err = cur.All(ctx, &results)
-	if err != nil {
-		return err
-	}
-	for _, u := range results {
-		fmt.Println(u)
-	}
 	store := repository.NewMongoDBURLStorer(coll)
 
 	// create slugger
@@ -89,19 +78,21 @@ func run() error { //nolint:funlen,cyclop
 
 	// create server
 	r := chi.NewRouter()
-	srv, err := server.NewHTTPServer(r, svc, conf.Port, http.FS(assets), log)
+	srv, err := server.NewHTTPServer(r, svc, conf.Port, http.FS(mustGetFrontend()), log)
 	if err != nil {
 		return fmt.Errorf("error while creating server: %w", err)
 	}
-	err = srv.Setup(ctx)
-	if err != nil {
-		return fmt.Errorf("error while running server setup: %w", err)
-	}
 
-	// Start HTTP server
+	// // Start HTTP server
 	go func() {
-		err := srv.Start(ctx) //nolint:govet
+		log.Info("Server started listening on " + srv.Addr)
+		err := srv.Start(ctx)
 		if err != nil {
+			if errors.Is(err, http.ErrServerClosed) {
+				log.Info("Server closed")
+
+				return
+			}
 			log.Fatal("error while running HTTP server", err)
 		}
 	}()
@@ -113,4 +104,13 @@ func run() error { //nolint:funlen,cyclop
 	}
 
 	return nil
+}
+
+func mustGetFrontend() fs.FS {
+	f, err := fs.Sub(assets, "ui/dist")
+	if err != nil {
+		panic(err)
+	}
+
+	return f
 }

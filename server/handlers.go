@@ -1,105 +1,145 @@
 package server
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/go-chi/chi/v5"
 	"github.com/indiependente/shrtnr/models"
 	"github.com/indiependente/shrtnr/service"
 )
 
-func (srv HTTPServer) getURL() http.HandlerFunc {
-	return func(w http.ResponseWriter) {
-		slug := c.Params("slug")
-		url, err := srv.svc.Get(c.Context(), slug)
+func (srv *HTTPServer) getURL() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		slug := chi.URLParam(r, "slug")
+		url, err := srv.svc.Get(r.Context(), slug)
 		switch {
 		case errors.Is(err, service.ErrSlugNotFound):
-			return c.SendStatus(http.StatusNotFound)
+			http.Error(w, "not found", http.StatusNotFound)
+
+			return
 		case errors.Is(err, service.ErrInvalidSlug):
-			return c.SendStatus(http.StatusBadRequest)
+			http.Error(w, "bad request", http.StatusBadRequest)
+
+			return
 		case err != nil:
-			return c.Status(http.StatusInternalServerError).SendString(err.Error())
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+
+			return
 		default: // all good
-			if err := c.Status(http.StatusOK).JSON(url); err != nil {
-				return c.Status(http.StatusInternalServerError).SendString(err.Error())
+			err := json.NewEncoder(w).Encode(url)
+			if err != nil {
+				http.Error(w, "encoding error", http.StatusInternalServerError)
+
+				return
 			}
 		}
-		return nil
 	}
 }
 
-func (srv HTTPServer) putURL() fiber.Handler {
-	return func(c *fiber.Ctx) error {
+func (srv *HTTPServer) putURL() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		url := models.URLShortened{}
-		if err := c.BodyParser(&url); err != nil {
-			return c.Status(http.StatusBadRequest).SendString(err.Error())
+		err := json.NewDecoder(r.Body).Decode(&url)
+		if err != nil {
+			http.Error(w, "bad request", http.StatusBadRequest)
+
+			return
 		}
-		newUrl, err := srv.svc.Add(c.Context(), url)
+		newURL, err := srv.svc.Add(r.Context(), url)
 		switch {
 		case errors.Is(err, service.ErrSlugAlreadyInUse):
-			return c.Status(http.StatusBadRequest).SendString(err.Error())
+			http.Error(w, "bad request", http.StatusBadRequest)
+
+			return
 		case errors.Is(err, service.ErrInvalidSlug):
-			return c.Status(http.StatusBadRequest).SendString(err.Error())
+			http.Error(w, "bad request", http.StatusBadRequest)
+
+			return
 		case err != nil:
-			return c.Status(http.StatusInternalServerError).SendString(err.Error())
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+
+			return
 		default: // all good
-			if err := c.Status(http.StatusOK).JSON(newUrl); err != nil {
-				return c.Status(http.StatusInternalServerError).SendString(err.Error())
+			err := json.NewEncoder(w).Encode(newURL)
+			if err != nil {
+				http.Error(w, "encoding error", http.StatusInternalServerError)
+
+				return
 			}
 		}
-		return nil
 	}
 }
 
-func (srv HTTPServer) delURL() fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		slug := c.Params("slug")
-		err := srv.svc.Delete(c.Context(), slug)
+func (srv *HTTPServer) delURL() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		slug := chi.URLParam(r, "slug")
+		err := srv.svc.Delete(r.Context(), slug)
 		switch {
 		case errors.Is(err, service.ErrSlugNotFound):
-			return c.SendStatus(http.StatusNotFound)
+			http.Error(w, "bad request", http.StatusNotFound)
+
+			return
 		case errors.Is(err, service.ErrInvalidSlug):
-			return c.SendStatus(http.StatusBadRequest)
+			http.Error(w, "bad request", http.StatusBadRequest)
+
+			return
 		case err != nil:
-			return c.Status(http.StatusInternalServerError).SendString(err.Error())
+			http.Error(w, "encoding error", http.StatusInternalServerError)
+
+			return
 		default: // all good
-			return c.SendStatus(http.StatusOK)
+			w.WriteHeader(http.StatusOK)
 		}
 	}
 }
 
-func (srv HTTPServer) resolveURL() fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		slug := c.Params("slug")
-		url, err := srv.svc.Get(c.Context(), slug)
+func (srv *HTTPServer) resolveURL() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		slug := chi.URLParam(r, "slug")
+		url, err := srv.svc.Get(r.Context(), slug)
 		switch {
 		case errors.Is(err, service.ErrSlugNotFound):
-			return c.SendStatus(http.StatusNotFound)
+			http.Error(w, "not found", http.StatusNotFound)
+
+			return
 		case errors.Is(err, service.ErrInvalidSlug):
-			return c.SendStatus(http.StatusBadRequest)
+			http.Error(w, "bad request", http.StatusBadRequest)
+
+			return
 		case err != nil:
-			return c.Status(http.StatusInternalServerError).SendString(err.Error())
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+
+			return
 		default: // all good
-			return c.Redirect(url.URL, http.StatusMovedPermanently)
+			http.Redirect(w, r, url.URL, http.StatusMovedPermanently)
+
+			return
 		}
 	}
 }
 
-func (srv HTTPServer) shortenURL() fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		var url models.URLShortened
-		err := c.BodyParser(&url)
+func (srv *HTTPServer) shortenURL() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		url := models.URLShortened{}
+		err := json.NewDecoder(r.Body).Decode(&url)
 		if err != nil {
-			return c.SendStatus(http.StatusInternalServerError)
+			http.Error(w, "bad request", http.StatusBadRequest)
+
+			return
 		}
-		short, err := srv.svc.Shorten(c.Context(), url.URL)
+		short, err := srv.svc.Shorten(r.Context(), url.URL)
 		if err != nil {
-			return c.Status(http.StatusInternalServerError).SendString(err.Error())
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+
+			return
 		}
-		if err := c.Status(http.StatusOK).JSON(short); err != nil {
-			return c.Status(http.StatusInternalServerError).SendString(err.Error())
+		err = json.NewEncoder(w).Encode(short)
+		if err != nil {
+			http.Error(w, "encoding error", http.StatusInternalServerError)
+
+			return
 		}
-		return nil
 	}
 }

@@ -31,9 +31,9 @@
 		}
 	},
 	"forwardPorts": [
-		7000
+		"localhost:7000"
 	],
-	"postCreateCommand": "cd frontend && npm install && npm run build",
+	"postCreateCommand": "cd ui && npm install && npm run build",
 	"features": {
 		"golang": "latest"
 	}
