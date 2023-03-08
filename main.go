@@ -2,13 +2,14 @@ package main
 
 import (
 	"context"
+	"embed"
+	"errors"
 	"fmt"
+	"io/fs"
 	"log"
-	"os"
-	"strconv"
+	"net/http"
 
-	rice "github.com/GeertJohan/go.rice"
-	"github.com/gofiber/fiber/v2"
+	"github.com/go-chi/chi/v5"
 	"github.com/indiependente/pkg/logger"
 	"github.com/indiependente/pkg/shutdown"
 	"github.com/indiependente/shrtnr/repository"
@@ -16,11 +17,16 @@ import (
 	"github.com/indiependente/shrtnr/service"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
 const (
-	appName = "shrtnr"
+	appName        = "shrtnr"
+	mongoDBTimeout = 5
 )
+
+//go:embed ui/dist
+var assets embed.FS
 
 func main() {
 	err := run()
@@ -29,24 +35,35 @@ func main() {
 	}
 }
 
-func run() error {
+func run() error { //nolint:funlen
 	log := logger.GetLoggerString(appName, "DEBUG")
+	conf, err := parseConfig()
+	if err != nil {
+		return err
+	}
 
-	mongoConf := repository.BuildMongoConfigs()
+	mongoConf := repository.DBConfig{
+		User:       conf.MongoDBUser,
+		Pass:       conf.MongoDBPassword,
+		Host:       conf.MongoDBHost,
+		Port:       conf.MongoDBPort,
+		DB:         conf.MongoDBName,
+		Collection: conf.MongoDBCollection,
+	}
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	client, err := mongo.NewClient(options.Client().ApplyURI(mongoConf.URI()))
-	if err != nil {
-		return fmt.Errorf("could not start mongodb: %w", err)
-	}
-
-	err = client.Connect(ctx)
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoConf.URI()))
 	if err != nil {
 		return fmt.Errorf("could not connect to mongodb: %w", err)
 	}
-	defer client.Disconnect(ctx) // nolint: errcheck
+	defer client.Disconnect(ctx) //nolint: errcheck
 
+	err = client.Ping(ctx, readpref.Primary())
+	if err != nil {
+		return fmt.Errorf("could not ping mongodb: %w", err)
+	}
 	db := client.Database(mongoConf.DB)
 
 	// create store
@@ -54,41 +71,28 @@ func run() error {
 	store := repository.NewMongoDBURLStorer(coll)
 
 	// create slugger
-	slugLen, err := strconv.Atoi(os.Getenv("SLUG_LEN"))
-	if err != nil {
-		return fmt.Errorf("could not parse SLUG_LEN: %w", err)
-	}
-	slugger := service.NewFixedLenSlugger(slugLen)
+	slugger := service.NewFixedLenSlugger(conf.SlugLen)
+
 	// create service
 	svc := service.NewURLService(store, slugger)
+
 	// create server
-	port, err := strconv.Atoi(os.Getenv("PORT"))
-	if err != nil {
-		return fmt.Errorf("could not parse PORT: %w", err)
-	}
-	app := fiber.New(fiber.Config{
-		CaseSensitive: true,
-		StrictRouting: true,
-		ServerHeader:  "Fiber",
-	})
-	box, err := rice.FindBox("./frontend/dist")
-	if err != nil {
-		return fmt.Errorf("could not find box: %w", err)
-	}
-	srv, err := server.NewHTTPServer(app, svc, port, box.HTTPBox(), log)
+	r := chi.NewRouter()
+	srv, err := server.NewHTTPServer(r, svc, conf.Port, http.FS(mustGetFrontend()), log)
 	if err != nil {
 		return fmt.Errorf("error while creating server: %w", err)
 	}
-	err = srv.Setup(ctx)
-	if err != nil {
-		return fmt.Errorf("error while running server setup: %w", err)
-	}
 
-	// Start HTTP server
+	// // Start HTTP server
 	go func() {
+		log.Info("Server started listening on " + srv.Addr)
 		err := srv.Start(ctx)
 		if err != nil {
-			fmt.Printf("%+v\n", err)
+			if errors.Is(err, http.ErrServerClosed) {
+				log.Info("Server closed")
+
+				return
+			}
 			log.Fatal("error while running HTTP server", err)
 		}
 	}()
@@ -98,5 +102,15 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("error while shutting down server: %w", err)
 	}
+
 	return nil
+}
+
+func mustGetFrontend() fs.FS {
+	f, err := fs.Sub(assets, "ui/dist")
+	if err != nil {
+		panic(err)
+	}
+
+	return f
 }

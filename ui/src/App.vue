@@ -63,11 +63,11 @@
 <script>
 import axios from "axios";
 export default {
-  name: process.env.VUE_APP_TITLE || "App",
+  name: import.meta.env.VITE_VUE_APP_TITLE || "App",
 
   data() {
     return {
-      baseURL: process.env.BASE_URL || "http://localhost:7000/",
+      baseURL: import.meta.env.BASE_URL || "http://localhost:7000/",
       websiteUrl: "",
       shortenedURL: "",
       showResult: false,

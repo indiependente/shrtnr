@@ -5,26 +5,26 @@ services:
     build: .
     restart: always
     ports:
-      - "7000:7000"
+      - 7000:7000
     environment:
       - MONGODB_PORT=27017
       - MONGODB_USER=frank
       - MONGODB_PASSWORD=password
       - MONGODB_HOST=db
-      - MONGODB_DB=shrtnr
+      - MONGODB_DBNAME=shrtnr
       - MONGODB_COLLECTION=urls
       - PORT=7000
       - SLUG_LEN=5
+      - LOG_LEVEL=DEBUG
     depends_on:
       - db
   db:
     image: mongo:latest
     restart: always
-    env_file: .env
     environment:
-      - MONGO_INITDB_DATABASE=${MONGO_INITDB_DATABASE}
-      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
-      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+      - MONGO_INITDB_DATABASE=shrtnr
+      - MONGO_INITDB_ROOT_USERNAME=frank
+      - MONGO_INITDB_ROOT_PASSWORD=password
     ports:
       - 27017:27017
     volumes:

@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package repository
@@ -335,7 +336,6 @@ func TestMongoDBURLStorer_Update(t *testing.T) {
 			store := NewMongoDBURLStorer(coll)
 			// delete url
 			err = store.Update(ctx, tt.url)
-			fmt.Println(err)
 			require.True(t, errors.Is(err, tt.err))
 		})
 	}

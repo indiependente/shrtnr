@@ -1,56 +1,50 @@
 package server
 
 import (
-	"os"
+	"net/http"
 	"time"
 
-	"github.com/gofiber/fiber/v2/middleware/compress"
-	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/filesystem"
-	"github.com/gofiber/fiber/v2/middleware/logger"
-	"github.com/gofiber/fiber/v2/middleware/pprof"
-	"github.com/gofiber/fiber/v2/middleware/recover"
-	"github.com/gofiber/fiber/v2/middleware/requestid"
-	"github.com/google/uuid"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/render"
+	"github.com/indiependente/pkg/logger"
 )
 
 const (
+	// PingPath is used to check the service is still up and running by load balancers etc.
+	PingPath = `/ping`
 	// URLShortenPath is the path used to perform CRUD ops on urls.
 	URLShortenPath = `/url`
 	// URLResolvePath is the path used to resolve shortened urls.
 	URLResolvePath = `/r`
+	// ProfileDebugPath is the path used to read profiling data.
+	ProfileDebugPath        = `/debug`
+	defaultCompressionLevel = 5
 )
 
-func (srv HTTPServer) middlewares() {
-	srv.app.Use(compress.New())
-	srv.app.Use(recover.New())
-	srv.app.Use(pprof.New())
-	srv.app.Use(requestid.New(requestid.Config{
-		Generator: func() string {
-			return uuid.New().String()
-		},
-	}))
-	srv.app.Use(cors.New())
-	srv.app.Use("/", filesystem.New(filesystem.Config{
-		Root: srv.assets,
-	}))
-	// Default middleware config
-	srv.app.Use(logger.New(logger.Config{
-		Format: "{\"time\": \"${time}\", \"referer\": \"${referer}\", \"protocol\": \"${protocol}\"," +
-			" \"ip\": \"${ip}\", \"host\": \"${host}\", \"method\": \"${method}\", \"header\":\"${header:x-request-id}\"," +
-			"\"url\": \"${url}\", \"ua\": \"${ua}\", \"latency\": \"${latency}\", \"status\": \"${status}\", \"body\": \"${body}\", " +
-			"\"bytesSent\": \"${bytesSent}\", \"bytesReceived\": \"${bytesReceived}\", \"route\": \"${route}\", \"error\": \"${error}\"}\n",
-		TimeFormat: time.RFC3339Nano,
-		TimeZone:   "Local",
-		Output:     os.Stdout,
-	}))
-
+func (srv *HTTPServer) middlewares(log logger.Logger) {
+	srv.router.Use(middleware.Heartbeat(PingPath))
+	srv.router.Use(middleware.Timeout(time.Minute))
+	srv.router.Use(middleware.RealIP)
+	srv.router.Use(middleware.RequestID)
+	srv.router.Use(FastLogger(log))
+	srv.router.Use(middleware.Recoverer)
+	srv.router.Use(middleware.URLFormat)
+	srv.router.Use(render.SetContentType(render.ContentTypeJSON))
+	srv.router.Use(middleware.Compress(defaultCompressionLevel, "application/json"))
+	srv.router.Mount(ProfileDebugPath, middleware.Profiler())
 }
 
-func (srv HTTPServer) routes() {
-	srv.app.Get(URLShortenPath+"/:slug", getURL(srv.svc))
-	srv.app.Put(URLShortenPath, putURL(srv.svc))
-	srv.app.Delete(URLShortenPath+"/:slug", delURL(srv.svc))
-	srv.app.Get(URLResolvePath+"/:slug", resolveURL(srv.svc))
-	srv.app.Post(URLShortenPath, shortenURL(srv.svc))
+func (srv *HTTPServer) routes() {
+	srv.router.Handle("/*", http.FileServer(srv.assets))
+	srv.router.Route(URLShortenPath, func(r chi.Router) {
+		r.Put("/", srv.putURL())
+		r.Post("/", srv.shortenURL())
+		r.Route("/{slug}", func(r chi.Router) {
+			r.Get("/", srv.getURL())
+			r.Delete("/", srv.delURL())
+		})
+	})
+
+	srv.router.Get(URLResolvePath+"/{slug}", srv.resolveURL())
 }

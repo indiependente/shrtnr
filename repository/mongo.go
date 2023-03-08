@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 
 	"github.com/indiependente/shrtnr/models"
 	"go.mongodb.org/mongo-driver/bson"
@@ -24,7 +23,7 @@ type mongoURLShortened struct {
 	Hits int                `bson:"hits"`
 }
 
-// MongoDBStorer implements the Storer using a MongoDB store.
+// MongoDBURLStorer implements the Storer using a MongoDB store.
 type MongoDBURLStorer struct {
 	urls *mongo.Collection
 }
@@ -114,25 +113,14 @@ func (m MongoDBURLStorer) Delete(ctx context.Context, slug string) error {
 	return nil
 }
 
-// Configs MongoDB configuration
-type Configs struct {
+// DBConfig MongoDB configuration.
+type DBConfig struct {
 	User, Pass, Host, Port, DB, Collection string
 }
 
 // URI returns the URI string.
-func (c Configs) URI() string {
+func (c DBConfig) URI() string {
 	return fmt.Sprintf(uriFmt, c.User, c.Pass, c.Host, c.Port, c.DB)
-}
-
-// BuildMongoConfigs parses MongoDB configurations from the environment.
-func BuildMongoConfigs() Configs {
-	user := os.Getenv("MONGODB_USER")
-	pass := os.Getenv("MONGODB_PASSWORD")
-	host := os.Getenv("MONGODB_HOST")
-	port := os.Getenv("MONGODB_PORT")
-	db := os.Getenv("MONGODB_DB")
-	coll := os.Getenv("MONGODB_COLLECTION")
-	return Configs{User: user, Pass: pass, Host: host, Port: port, DB: db, Collection: coll}
 }
 
 func toMongo(u models.URLShortened) mongoURLShortened {
