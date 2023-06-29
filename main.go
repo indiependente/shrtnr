@@ -36,12 +36,7 @@ func run() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	client, err := mongo.NewClient(options.Client().ApplyURI(mongoConf.URI()))
-	if err != nil {
-		return fmt.Errorf("could not start mongodb: %w", err)
-	}
-
-	err = client.Connect(ctx)
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoConf.URI()))
 	if err != nil {
 		return fmt.Errorf("could not connect to mongodb: %w", err)
 	}
