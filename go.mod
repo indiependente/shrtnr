@@ -4,7 +4,7 @@ go 1.15
 
 require (
 	github.com/GeertJohan/go.rice v1.0.3
-	github.com/gofiber/fiber/v2 v2.47.0
+	github.com/gofiber/fiber/v2 v2.48.0
 	github.com/golang/mock v1.6.0
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/uuid v1.3.0
@@ -16,7 +16,6 @@ require (
 	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/rs/zerolog v1.29.1 // indirect
 	github.com/stretchr/testify v1.8.4
-	github.com/valyala/fasthttp v1.48.0 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
 	go.mongodb.org/mongo-driver v1.12.1
 	golang.org/x/crypto v0.10.0 // indirect
