@@ -1,4 +1,4 @@
-LINTER_VERSION=1.33.0
+LINTER_VERSION=1.54.1
 
 .PHONY:all
 all: lint test build
