@@ -4,12 +4,11 @@ go 1.15
 
 require (
 	github.com/GeertJohan/go.rice v1.0.3
-	github.com/gofiber/fiber/v2 v2.48.0
+	github.com/gofiber/fiber/v2 v2.49.0
 	github.com/golang/mock v1.6.0
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/uuid v1.3.1
 	github.com/indiependente/pkg v0.2.1
-	github.com/klauspost/compress v1.16.6 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/montanaflynn/stats v0.7.1 // indirect
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
